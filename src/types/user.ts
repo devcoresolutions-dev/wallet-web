@@ -1,4 +1,4 @@
-import { CurrencyCode } from './currency';
+import type { CurrencyCode } from './currency';
 
 export interface User {
   id: string;

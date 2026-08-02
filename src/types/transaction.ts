@@ -1,4 +1,4 @@
-import { CurrencyCode } from './currency';
+import type { CurrencyCode } from './currency';
 
 export type TransactionType = 'BUY' | 'SELL' | 'EXCHANGE';
 export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
