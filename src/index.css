@@ -1,33 +1,110 @@
-/* fonts van aqui */
-/* @import url('https://fonts.googleapis.com/...'); */
+/* ─── Fuentes del Wireframe: DM Sans, DM Serif Display, JetBrains Mono ────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap');
 
 :root {
-  /* fonts van aqui */
-  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  /* ─── Tipografías ─────────────────────────────────────────────────────────── */
+  --font-sans: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  /* Colores provisionales en escala de grises (a la espera de definicion de paleta) */
-  --color-bg-primary: #121212;
-  --color-bg-secondary: #1e1e1e;
-  --color-bg-card: #252525;
-  --color-border: #333333;
-  --color-text-primary: #f5f5f5;
-  --color-text-secondary: #a0a0a0;
-  --color-text-muted: #666666;
-  --color-accent: #888888;
+  --font-family-base: var(--font-sans);
+
+  /* ─── Colores Primarios Base ─────────────────────────────────────────────── */
+  --color-primary-white: #F5F5F5;
+  --color-signature-red: #C23B3B;
+  --color-radiant-gold:  #D4AF37;
+  --color-base-charcoal: #1C1C1C;
+  --color-coat-brown:    #4A342C;
+
+  /* ─── Tokens Semánticos (Tema Oscuro por defecto) ────────────────────────── */
+  --bg:               #1C1C1C;
+  --bg-card:          #262220;
+  --bg-subtle:        #3A2B25;
+  --bg-subtle-hover:  #4A342C;
+  --text:             #F5F5F5;
+  --text-muted:       #D4C9BF;
+  --text-subtle:      #A3968A;
+  --border:           rgba(212, 175, 55, 0.22);
+  --border-subtle:    rgba(74, 52, 44, 0.6);
+  --accent:           #D4AF37;
+  --accent-soft:      rgba(212, 175, 55, 0.15);
+  --primary-btn:      #C23B3B;
+  --primary-btn-hover:#D84545;
+  --success:          #4EBA6F;
+  --danger:           #C23B3B;
+
+  /* ─── Tokens de Compatibilidad ──────────────────────────────────────────── */
+  --color-bg-primary:    var(--bg);
+  --color-bg-secondary:  var(--bg-card);
+  --color-bg-card:       var(--bg-card);
+  --color-border:        var(--border);
+  --color-text-primary:  var(--text);
+  --color-text-secondary:var(--text-muted);
+  --color-text-muted:    var(--text-subtle);
+  --color-accent:        var(--accent);
 }
 
-* {
+[data-theme='light'] {
+  --bg:               #F5F5F5;
+  --bg-card:          #FFFFFF;
+  --bg-subtle:        #EFEAE4;
+  --bg-subtle-hover:  #E4DCD3;
+  --text:             #1C1C1C;
+  --text-muted:       #4A342C;
+  --text-subtle:      #7F7067;
+  --border:           rgba(74, 52, 44, 0.18);
+  --border-subtle:    rgba(212, 175, 55, 0.3);
+  --accent:           #C23B3B;
+  --accent-soft:      rgba(194, 59, 59, 0.1);
+  --primary-btn:      #C23B3B;
+  --primary-btn-hover:#A83030;
+  --success:          #4EBA6F;
+  --danger:           #C23B3B;
+}
+
+/* ─── Base Reset & Mobile-First Foundation ─────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: var(--font-family-base);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ─── Clases de Utilidad de Fuentes ───────────────────────────────────────── */
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
 }
 
 a {
@@ -35,7 +112,11 @@ a {
   text-decoration: none;
 }
 
-button {
+button, input, select, textarea {
   font-family: inherit;
+  font-size: inherit;
+}
+
+button {
   cursor: pointer;
 }

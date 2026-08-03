@@ -1,67 +1,95 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-
+/* Mobile-First Layout */
 .screen {
   min-height: 100vh;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 48px 20px;
-  background: #ffffff;
-  font-family: 'DM Sans', sans-serif;
+  padding: 24px 16px;
+  background: var(--bg);
+  font-family: var(--font-sans);
+  color: var(--text);
+  width: 100%;
 }
 
 .wrapper {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   width: 100%;
-  max-width: 440px;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .screen {
+    padding: 48px 24px;
+  }
+
+  .wrapper {
+    max-width: 440px;
+    gap: 24px;
+  }
 }
 
 .titleRow {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 14px;
 }
 
 .iconBox {
   width: 44px;
   height: 44px;
-  border: 1px solid #000;
+  border: 1px solid var(--border);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
 }
 
 .title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 30px;
-  color: #000;
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--text);
   margin: 0;
   line-height: 1.2;
 }
 
+@media (min-width: 640px) {
+  .title {
+    font-size: 30px;
+  }
+}
+
 .subtitle {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
-  color: #333;
+  color: var(--text-muted);
   margin: 4px 0 0;
 }
 
 .card {
-  background: transparent;
-  border: 1px solid #000;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 20px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .card {
+    padding: 24px;
+  }
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .field {
@@ -70,31 +98,32 @@
 }
 
 .label {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #333;
+  color: var(--text-muted);
   margin-bottom: 8px;
 }
 
 .input {
   width: 100%;
-  background: transparent;
-  border: 1px solid #000;
+  min-height: 48px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 16px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
-  color: #000;
+  color: var(--text);
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.15s ease, opacity 0.15s ease;
 }
 
 .input::placeholder {
-  color: rgba(0, 0, 0, 0.3);
+  color: var(--text-subtle);
 }
 
 .input:disabled {
@@ -103,38 +132,43 @@
 }
 
 .inputError {
-  border-color: #dc2626;
+  border-color: var(--danger);
 }
 
 .fieldError {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
-  color: #dc2626;
+  color: var(--danger);
   margin: 6px 0 0;
 }
 
 .submitError {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
-  color: #dc2626;
-  margin: -8px 0 0;
+  color: var(--danger);
+  margin: -4px 0 0;
 }
 
 .submitButton {
   width: 100%;
-  padding: 16px;
+  min-height: 48px;
+  padding: 14px 16px;
   border-radius: 14px;
-  border: 1px solid #000;
-  background: transparent;
-  font-family: 'DM Sans', sans-serif;
+  border: 1px solid var(--border);
+  background: var(--primary-btn);
+  color: var(--color-primary-white);
+  font-family: var(--font-sans);
   font-weight: 800;
   font-size: 15px;
   cursor: pointer;
   transition: background 0.15s ease, opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .submitButton:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--primary-btn-hover);
 }
 
 .submitButton:disabled {
@@ -143,9 +177,9 @@
 }
 
 .switchText {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
-  color: #333;
+  color: var(--text-muted);
   text-align: center;
   margin: 0;
 }
@@ -159,4 +193,5 @@
   padding: 0;
   font-family: inherit;
   font-size: inherit;
+  color: var(--accent);
 }
