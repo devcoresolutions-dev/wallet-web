@@ -169,6 +169,9 @@ export const RegisterPage: React.FC = () => {
   return (
     <div className={styles.screen}>
       <div className={styles.wrapper}>
+        <Link to="/" className={styles.backLink}>
+          ← Volver al inicio
+        </Link>
         <div className={styles.titleRow}>
           <div className={styles.iconBox}>✧</div>
           <div>

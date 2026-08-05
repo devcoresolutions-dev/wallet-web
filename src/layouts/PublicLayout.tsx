@@ -4,11 +4,11 @@ import { Outlet } from 'react-router-dom';
 export const PublicLayout: React.FC = () => {
   return (
     <div className="public-layout">
-      {/* Header / Navbar pública irá aquí */}
+      {/* Header / Navbar publica iran aquii */}
       <main>
         <Outlet />
       </main>
-      {/* Footer público irá aquí */}
+      {/* Footer publico ira aqui */}
     </div>
   );
 };
