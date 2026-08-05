@@ -1,32 +1,29 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import styles from './LoginPage.module.css';
+import styles from './ResetPasswordPage.module.css';
 
-// ─── Tipos y validación ─────────────────────────────────────────────────
-
-type Field = 'email' | 'password';
+type Field = 'password' | 'confirmPassword';
 
 interface Values {
-  email: string;
   password: string;
+  confirmPassword: string;
 }
 
 const EMPTY_VALUES: Values = {
-  email: '',
   password: '',
+  confirmPassword: '',
 };
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validateField(field: Field, values: Values): string | undefined {
   switch (field) {
-    case 'email':
-      if (!values.email.trim()) return 'Ingresá tu email.';
-      if (!EMAIL_REGEX.test(values.email.trim())) return 'Ingresá un email válido.';
-      return undefined;
     case 'password':
-      if (!values.password) return 'Ingresá tu contraseña.';
+      if (!values.password) return 'Ingresá tu nueva contraseña.';
+      if (values.password.length < 8) return 'Debe tener al menos 8 caracteres.';
+      return undefined;
+    case 'confirmPassword':
+      if (!values.confirmPassword) return 'Confirmá tu nueva contraseña.';
+      if (values.confirmPassword !== values.password) return 'Las contraseñas no coinciden.';
       return undefined;
   }
 }
@@ -40,12 +37,11 @@ function validateAll(values: Values) {
   return errors;
 }
 
-// Simulación de login — todavía NO llama a la API real.
-function mockLoginRequest(values: Values): Promise<void> {
+function mockResetPassword(values: Values): Promise<void> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (values.password === 'wrongpass') {
-        reject(new Error('Email o contraseña incorrectos.'));
+      if (values.password === 'error1234') {
+        reject(new Error('El token de restablecimiento ha expirado o es inválido.'));
       } else {
         resolve();
       }
@@ -53,21 +49,24 @@ function mockLoginRequest(values: Values): Promise<void> {
   });
 }
 
-// ─── Componente ─────────────────────────────────────────────────────────
-
-export const LoginPage: React.FC = () => {
+export const ResetPasswordPage: React.FC = () => {
   const [values, setValues] = useState<Values>(EMPTY_VALUES);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   function handleChange(field: Field) {
     return (e: ChangeEvent<HTMLInputElement>) => {
       const next = { ...values, [field]: e.target.value };
       setValues(next);
+
       if (touched[field]) {
         setErrors((prev) => ({ ...prev, [field]: validateField(field, next) }));
+      }
+      if (field === 'password' && touched.confirmPassword) {
+        setErrors((prev) => ({ ...prev, confirmPassword: validateField('confirmPassword', next) }));
       }
     };
   }
@@ -85,15 +84,16 @@ export const LoginPage: React.FC = () => {
 
     const allErrors = validateAll(values);
     setErrors(allErrors);
-    setTouched({ email: true, password: true });
+    setTouched({ password: true, confirmPassword: true });
 
     if (Object.keys(allErrors).length > 0) return;
 
     setSubmitting(true);
     try {
-      await mockLoginRequest(values);
+      await mockResetPassword(values);
+      setSuccess(true);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'No pudimos iniciar sesión.');
+      setSubmitError(err instanceof Error ? err.message : 'No pudimos actualizar tu contraseña.');
     } finally {
       setSubmitting(false);
     }
@@ -103,16 +103,9 @@ export const LoginPage: React.FC = () => {
     const error = touched[field] ? errors[field] : undefined;
     return (
       <div className={styles.field}>
-        <div className={styles.labelRow}>
-          <label className={styles.label} htmlFor={field}>
-            {label}
-          </label>
-          {field === 'password' && (
-            <Link to="/forgot-password" className={styles.forgotLink}>
-              ¿Olvidaste tu contraseña?
-            </Link>
-          )}
-        </div>
+        <label className={styles.label} htmlFor={field}>
+          {label}
+        </label>
         <input
           id={field}
           type={type}
@@ -129,37 +122,58 @@ export const LoginPage: React.FC = () => {
     );
   }
 
+  if (success) {
+    return (
+      <div className={styles.screen}>
+        <div className={styles.wrapper}>
+          <div className={styles.titleRow}>
+            <div className={styles.iconBox}>✓</div>
+            <div>
+              <h1 className={styles.title}>¡Contraseña actualizada!</h1>
+              <p className={styles.subtitle}>Tu clave ha sido cambiada correctamente.</p>
+            </div>
+          </div>
+          <div className={styles.card}>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.6 }}>
+              Ya podés ingresar a tu billetera con tu nueva contraseña.
+            </p>
+            <Link to="/login" className={styles.submitButton} style={{ textDecoration: 'none' }}>
+              Iniciar sesión
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.screen}>
       <div className={styles.wrapper}>
-        <Link to="/" className={styles.backLink}>
-          ← Volver al inicio
-        </Link>
         <div className={styles.titleRow}>
-          <div className={styles.iconBox}>◫</div>
+          <div className={styles.iconBox}>🔐</div>
           <div>
-            <h1 className={styles.title}>Iniciar sesión</h1>
-            <p className={styles.subtitle}>Accedé a tu billetera multi-moneda</p>
+            <h1 className={styles.title}>Nueva contraseña</h1>
+            <p className={styles.subtitle}>Ingresá tu nueva clave para acceder</p>
           </div>
         </div>
 
         <div className={styles.card}>
           <form className={styles.form} onSubmit={handleSubmit} noValidate>
-            {renderField('email', 'Email', 'email', 'tu@email.com')}
-            {renderField('password', 'Contraseña', 'password', '••••••••')}
+            {renderField('password', 'Nueva contraseña', 'password', '••••••••')}
+            {renderField('confirmPassword', 'Confirmar nueva contraseña', 'password', '••••••••')}
 
             {submitError && <p className={styles.submitError}>{submitError}</p>}
 
             <button type="submit" disabled={submitting} className={styles.submitButton}>
-              {submitting ? 'Ingresando...' : 'Iniciar sesión'}
+              {submitting ? 'Guardando...' : 'Cambiar contraseña'}
             </button>
           </form>
         </div>
 
         <p className={styles.switchText}>
-          ¿No tenés cuenta?{' '}
-          <Link to="/register" className={styles.switchLink}>
-            Registrate
+          ¿Volver al inicio?{' '}
+          <Link to="/login" className={styles.switchLink}>
+            Iniciar sesión
           </Link>
         </p>
       </div>
@@ -167,4 +181,4 @@ export const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default ResetPasswordPage;
