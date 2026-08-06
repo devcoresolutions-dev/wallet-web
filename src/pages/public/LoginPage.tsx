@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './LoginPage.module.css';
+import { loginUser, ApiError } from '../../services/authService';
 
-// ─── Tipos y validación ─────────────────────────────────────────────────
+// Tipos y validación
 
 type Field = 'email' | 'password';
 
@@ -40,22 +41,10 @@ function validateAll(values: Values) {
   return errors;
 }
 
-// Simulación de login — todavía NO llama a la API real.
-function mockLoginRequest(values: Values): Promise<void> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (values.password === 'wrongpass') {
-        reject(new Error('Email o contraseña incorrectos.'));
-      } else {
-        resolve();
-      }
-    }, 1000);
-  });
-}
-
-// ─── Componente ─────────────────────────────────────────────────────────
+// Componente
 
 export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
   const [values, setValues] = useState<Values>(EMPTY_VALUES);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
@@ -91,9 +80,28 @@ export const LoginPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await mockLoginRequest(values);
+      const emailLower = values.email.trim().toLowerCase();
+      if (emailLower === 'test@ewallet.com') {
+        // Bypass para pruebas locales con datos mockeados
+        localStorage.setItem('token', 'mock-token');
+        navigate('/dashboard');
+        return;
+      }
+
+      const { token } = await loginUser({
+        email: emailLower,
+        password: values.password,
+      });
+      // Guardar el token JWT
+      localStorage.setItem('token', token);
+      // Redirigir al dashboard
+      navigate('/dashboard');
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'No pudimos iniciar sesión.');
+      if (err instanceof ApiError) {
+        setSubmitError(err.message || 'Email o contraseña incorrectos.');
+      } else {
+        setSubmitError('Error de conexión. Verificá tu internet e intentá de nuevo.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -136,7 +144,7 @@ export const LoginPage: React.FC = () => {
           ← Volver al inicio
         </Link>
         <div className={styles.titleRow}>
-          <div className={styles.iconBox}>◫</div>
+          <div className={styles.iconBox}>X</div>
           <div>
             <h1 className={styles.title}>Iniciar sesión</h1>
             <p className={styles.subtitle}>Accedé a tu billetera multi-moneda</p>

@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* ─── Historial de Transacciones ─ Mobile-First ────────────────────────────── */
 
 .screen {
   min-height: 100vh;
   padding: 32px 20px 80px;
-  background: #ffffff;
-  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  font-family: var(--font-sans);
+  color: var(--text);
 }
 
 .wrapper {
@@ -24,27 +25,29 @@
 .iconBox {
   width: 44px;
   height: 44px;
-  border: 1px solid #000;
+  border: 1px solid var(--border);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
 }
 
 .title {
-  font-family: 'DM Serif Display', serif;
+  font-family: var(--font-display);
   font-size: 30px;
-  color: #000;
+  color: var(--text);
   margin: 0;
   line-height: 1.2;
 }
 
 .subtitle {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
-  color: #333;
+  color: var(--text-muted);
   margin: 4px 0 0;
 }
 
@@ -59,23 +62,31 @@
 .filterButton {
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid #000;
+  border: 1px solid var(--border);
   background: transparent;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  color: #000;
-  transition: background 0.15s ease;
+  color: var(--text);
+  transition: all 0.2s ease;
 }
 
 .filterButton:hover {
-  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .filterButtonActive {
-  background: #000;
-  color: #fff;
+  background: var(--primary-btn);
+  color: var(--color-primary-white);
+  border-color: var(--primary-btn);
+}
+
+.filterButtonActive:hover {
+  background: var(--primary-btn-hover);
+  border-color: var(--primary-btn-hover);
+  color: var(--color-primary-white);
 }
 
 /* Lista de transacciones */
@@ -87,12 +98,18 @@
 }
 
 .item {
-  border: 1px solid #000;
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: var(--bg-card);
+  transition: border-color 0.2s ease;
+}
+
+.item:hover {
+  border-color: var(--accent);
 }
 
 .itemHeader {
@@ -102,24 +119,26 @@
 }
 
 .typeBadge {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid #000;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .date {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
-  color: #333;
+  color: var(--text-muted);
 }
 
 .statusBadge {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -127,29 +146,29 @@
 }
 
 .statusCompleted {
-  color: #1d9e75;
+  color: var(--success);
 }
 
 .statusPending {
-  color: #a16207;
+  color: var(--color-radiant-gold);
 }
 
 .statusFailed {
-  color: #dc2626;
+  color: var(--danger);
 }
 
 .amountRow {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 18px;
   font-weight: 600;
-  color: #000;
+  color: var(--text);
 }
 
 .arrow {
-  color: #333;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
@@ -158,38 +177,38 @@
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   padding-top: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--border);
 }
 
 .detailLabel {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #333;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
 .detailValue {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
-  color: #000;
+  color: var(--text);
 }
 
 .detailValueMuted {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
-  color: #333;
+  color: var(--text-subtle);
 }
 
 /* Estados: loading / error / vacío */
 
 .skeleton {
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
   border-radius: 16px;
   height: 112px;
-  background: linear-gradient(90deg, #f5f5f5 25%, #ececec 37%, #f5f5f5 63%);
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-subtle) 37%, var(--bg-card) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -198,60 +217,66 @@
   0% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0 50%;
   }
 }
 
 .emptyState {
-  border: 1px solid #000;
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 40px 20px;
   text-align: center;
+  background: var(--bg-card);
 }
 
 .emptyTitle {
-  font-family: 'DM Serif Display', serif;
+  font-family: var(--font-display);
   font-size: 20px;
-  color: #000;
+  color: var(--text);
   margin: 0 0 6px;
 }
 
 .emptyText {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
-  color: #333;
+  color: var(--text-muted);
   margin: 0;
 }
 
 .errorState {
-  border: 1px solid #dc2626;
+  border: 1px solid var(--danger);
   border-radius: 16px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   align-items: flex-start;
+  background: var(--bg-card);
 }
 
 .errorText {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
-  color: #dc2626;
+  color: var(--danger);
   margin: 0;
 }
 
 .retryButton {
   padding: 10px 18px;
   border-radius: 10px;
-  border: 1px solid #000;
+  border: 1px solid var(--border);
   background: transparent;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
+  color: var(--text);
+  transition: all 0.2s ease;
 }
 
 .retryButton:hover {
-  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--accent);
+  color: var(--accent);
 }

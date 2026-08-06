@@ -1,0 +1,98 @@
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.iconBox {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 32px);
+  color: var(--text);
+  margin: 0;
+}
+
+.description {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 400px;
+}
+
+.button {
+  padding: 12px 24px;
+  border-radius: 14px;
+  border: none;
+  background: var(--primary-btn);
+  color: var(--color-primary-white);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button:hover {
+  background: var(--primary-btn-hover);
+  transform: translateY(-2px);
+}
+
+.floatingLogout {
+  position: fixed;
+  bottom: 80px; /* Separado del bottom navigation bar en móvil */
+  right: 24px;
+  z-index: 99;
+  padding: 14px 20px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--danger);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.floatingLogout:hover {
+  background: var(--danger);
+  color: var(--color-primary-white);
+  border-color: var(--danger);
+  transform: translateY(-2px) scale(1.03);
+}
+
+@media (min-width: 1024px) {
+  .floatingLogout {
+    bottom: 32px;
+  }
+}

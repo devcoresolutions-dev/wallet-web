@@ -1,0 +1,290 @@
+/* Estilos del layout protegido, diseño mobile-first */
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Encabezado superior en móvil */
+
+.mobileHeader {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(28, 28, 28, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-b: 1px solid var(--border);
+}
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoIcon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 800;
+  background: var(--bg-card);
+}
+
+.logoText {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pageIndicator {
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: var(--accent-soft);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: capitalize;
+}
+
+/* Área de contenido principal */
+
+.mainContent {
+  flex: 1;
+  padding: 20px 16px 100px; /* Extra bottom padding for mobile navigation space */
+  overflow-y: auto;
+}
+
+/* Barra de navegación inferior en móvil */
+
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  background: rgba(28, 28, 28, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.navTab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+}
+
+.navTab:last-child {
+  border-right: none;
+}
+
+.tabIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+}
+
+.navTabActive {
+  color: var(--accent);
+}
+
+.navTabActive .tabIconBox {
+  background: var(--accent-soft);
+  border-color: var(--border);
+  color: var(--accent);
+}
+
+.tabLabel {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Diseño de escritorio */
+
+.desktopSidebar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .container {
+    flex-direction: row;
+  }
+
+  .mobileHeader {
+    display: none;
+  }
+
+  .bottomNav {
+    display: none;
+  }
+
+  .mainContent {
+    padding: 40px 60px;
+    height: 100vh;
+  }
+
+  /* Sidebar display on desktop */
+  .desktopSidebar {
+    display: flex;
+    flex-direction: column;
+    width: 260px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    padding: 30px 20px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+
+  .sidebarHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .sidebarLogoIcon {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 800;
+    background: var(--bg);
+  }
+
+  .sidebarLogoText {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+  }
+
+  .sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .sidebarLink {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .sidebarLink:hover {
+    background: var(--bg-subtle);
+    color: var(--text);
+  }
+
+  .sidebarLinkActive {
+    background: var(--bg-subtle);
+    border-color: var(--border);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .sidebarLinkActive .sidebarLinkIcon {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--border);
+  }
+
+  .sidebarLinkIcon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: var(--bg-subtle);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .sidebarFooter {
+    margin-top: auto;
+    padding: 16px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+
+  .sidebarFooterLabel {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .sidebarFooterValue {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+  }
+  
+  .sidebarFooterSub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--success);
+    margin-top: 2px;
+  }
+}
