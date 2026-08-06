@@ -80,7 +80,7 @@ export const DashboardPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Ejecutar en paralelo todas las consultas del backend
         const [userData, walletsData, txData] = await Promise.all([
           getCurrentUser(),
@@ -205,8 +205,8 @@ export const DashboardPage: React.FC = () => {
     }));
 
   // Si no hay saldo en ninguna moneda, mostramos ARS como 100% para evitar gráficos vacíos
-  const assetDistributionData = chartData.length > 0 
-    ? chartData 
+  const assetDistributionData = chartData.length > 0
+    ? chartData
     : [{ name: 'ARS', value: 1 }];
 
   // Gráfico de línea histórica (Mockeado en base al saldo actual para dar realismo visual)
@@ -226,7 +226,7 @@ export const DashboardPage: React.FC = () => {
   // Sugerencia dinámica de la IA en base a los saldos
   const mainBalanceARS = wallet.balances.find((b) => b.currencyCode === 'ARS')?.amount || '0.00';
   const mainBalanceARSNum = parseFloat(mainBalanceARS);
-  
+
   let aiSuggestion = '¡Billetera vacía! Realiza un depósito o ingresa fondos para comenzar a operar con distintas monedas.';
   if (mainBalanceARSNum > 500000) {
     aiSuggestion = 'Tienes una cantidad considerable de Pesos Argentinos. El dólar cotiza estable esta semana; podrías considerar diversificar un 20% a USD para resguardar tu capital.';
@@ -305,7 +305,7 @@ export const DashboardPage: React.FC = () => {
               {wallet.balances.map((b) => {
                 const currency = SUPPORTED_CURRENCIES[b.currencyCode];
                 const amount = parseFloat(b.amount);
-                
+
                 // Mostrar solo monedas activas o las principales (ARS, USD, EUR) y ocultar el resto si están en 0
                 if (amount === 0 && b.currencyCode !== 'ARS' && b.currencyCode !== 'USD' && b.currencyCode !== 'EUR') {
                   return null;
@@ -421,7 +421,7 @@ export const DashboardPage: React.FC = () => {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {assetDistributionData.map((entry, index) => (
+                    {assetDistributionData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
                   </Pie>
@@ -435,9 +435,9 @@ export const DashboardPage: React.FC = () => {
                       fontSize: 11,
                     }}
                     formatter={(value, name) => [
-                      chartData.length > 0 
-                        ? `${((value / totalPatrimonioARS) * 100).toFixed(1)}%` 
-                        : '0%', 
+                      chartData.length > 0
+                        ? `${(((value as number) / totalPatrimonioARS) * 100).toFixed(1)}%`
+                        : '0%',
                       name
                     ]}
                   />
@@ -447,7 +447,7 @@ export const DashboardPage: React.FC = () => {
             {/* Leyenda del gráfico */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginTop: 12 }}>
               {assetDistributionData.map((entry, index) => (
-                <div key={entry.name} style={{ display: 'flex', items: 'center', gap: 6, fontSize: 11 }}>
+                <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
                   <div
                     style={{
                       width: 10,
