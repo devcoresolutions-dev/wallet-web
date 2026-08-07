@@ -4,6 +4,6 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
-  defaultLocalCurrency: CurrencyCode;
+  defaultLocalCurrency?: CurrencyCode;
   createdAt: string;
 }
