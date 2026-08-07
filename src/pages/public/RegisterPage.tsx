@@ -2,8 +2,9 @@ import { useState } from 'react';
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './RegisterPage.module.css';
+import { registerUser, ApiError } from '../../services/authService';
 
-// ─── Tipos y validación ─────────────────────────────────────────────────
+// Tipos y validación
 
 type Field = 'fullName' | 'email' | 'password' | 'confirmPassword';
 
@@ -53,20 +54,7 @@ function validateAll(values: Values) {
   return errors;
 }
 
-// Simulación de registro — todavía NO llama a la API real.
-function mockRegisterRequest(values: Values): Promise<void> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (values.email.trim().toLowerCase() === 'test@error.com') {
-        reject(new Error('Ese email ya está registrado.'));
-      } else {
-        resolve();
-      }
-    }, 1200);
-  });
-}
-
-// ─── Componente ─────────────────────────────────────────────────────────
+// Componente
 
 export const RegisterPage: React.FC = () => {
   const [values, setValues] = useState<Values>(EMPTY_VALUES);
@@ -109,10 +97,18 @@ export const RegisterPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await mockRegisterRequest(values);
+      await registerUser({
+        fullName: values.fullName.trim(),
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+      });
       setSuccess(true);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'No pudimos crear tu cuenta.');
+      if (err instanceof ApiError) {
+        setSubmitError(err.message || 'No pudimos crear tu cuenta.');
+      } else {
+        setSubmitError('Error de conexión. Verificá tu internet e intentá de nuevo.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -173,7 +169,7 @@ export const RegisterPage: React.FC = () => {
           ← Volver al inicio
         </Link>
         <div className={styles.titleRow}>
-          <div className={styles.iconBox}>✧</div>
+          <div className={styles.iconBox}>X</div>
           <div>
             <h1 className={styles.title}>Crear cuenta</h1>
             <p className={styles.subtitle}>Empezá a gestionar tus ingresos en distintas monedas</p>

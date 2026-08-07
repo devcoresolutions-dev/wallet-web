@@ -1,86 +1,9 @@
 import { useEffect, useState } from 'react';
 import styles from './TransactionsPage.module.css';
 import type { Transaction, TransactionType } from '../../types/transaction';
+import { getTransactions } from '../../services/transactionService';
 
-
-const MOCK_TRANSACTIONS: Transaction[] = [
-  {
-    id: '1',
-    walletId: 'w-1',
-    type: 'BUY',
-    fromCurrency: 'ARS',
-    toCurrency: 'USD',
-    fromAmount: '95000',
-    toAmount: '100',
-    exchangeRate: '950.32',
-    feeAmount: '0.5',
-    feeCurrency: 'USD',
-    feeRate: '0.005',
-    rateSource: 'MOCK',
-    rateFetchedAt: '2026-08-01T14:31:50Z',
-    status: 'COMPLETED',
-    createdAt: '2026-08-01T14:32:00Z',
-  },
-  {
-    id: '2',
-    walletId: 'w-1',
-    type: 'EXCHANGE',
-    fromCurrency: 'USD',
-    toCurrency: 'EUR',
-    fromAmount: '200',
-    toAmount: '184.6',
-    exchangeRate: '0.923',
-    feeAmount: '0',
-    feeCurrency: 'EUR',
-    feeRate: '0',
-    rateSource: 'MOCK',
-    rateFetchedAt: '2026-07-29T09:09:50Z',
-    status: 'COMPLETED',
-    createdAt: '2026-07-29T09:10:00Z',
-  },
-  {
-    id: '3',
-    walletId: 'w-1',
-    type: 'SELL',
-    fromCurrency: 'EUR',
-    toCurrency: 'ARS',
-    fromAmount: '50',
-    toAmount: '51420',
-    exchangeRate: '1028.4',
-    feeAmount: '0.25',
-    feeCurrency: 'EUR',
-    feeRate: '0.005',
-    rateSource: 'MOCK',
-    rateFetchedAt: '2026-07-28T18:04:50Z',
-    status: 'PENDING',
-    createdAt: '2026-07-28T18:05:00Z',
-  },
-  {
-    id: '4',
-    walletId: 'w-1',
-    type: 'BUY',
-    fromCurrency: 'ARS',
-    toCurrency: 'BRL',
-    fromAmount: '30000',
-    toAmount: '156.8',
-    exchangeRate: '191.3',
-    feeAmount: '0.78',
-    feeCurrency: 'BRL',
-    feeRate: '0.005',
-    rateSource: 'MOCK',
-    rateFetchedAt: '2026-07-25T11:46:50Z',
-    status: 'FAILED',
-    createdAt: '2026-07-25T11:47:00Z',
-  },
-];
-
-function mockGetHistory(): Promise<Transaction[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(MOCK_TRANSACTIONS), 900);
-  });
-}
-
-// ─── Helpers de formato ─────────────────────────────────────────────────
+// Helpers de formato
 
 const TYPE_LABEL: Record<TransactionType, string> = {
   BUY: 'Compra',
@@ -125,7 +48,7 @@ function formatFee(t: Transaction): string {
   return `${formatAmount(t.feeAmount, t.feeCurrency)}`;
 }
 
-// ─── Componente ─────────────────────────────────────────────────────────
+// Componente
 
 const FILTERS: Array<{ key: TransactionType | 'ALL'; label: string }> = [
   { key: 'ALL', label: 'Todas' },
@@ -143,9 +66,12 @@ export default function History() {
   function load() {
     setLoading(true);
     setError(null);
-    mockGetHistory()
+    getTransactions()
       .then(setTransactions)
-      .catch(() => setError('No pudimos cargar tu historial. Intentá de nuevo.'))
+      .catch((err) => {
+        console.error('Error cargando transacciones:', err);
+        setError('No pudimos conectar con el backend. Verificá tu sesión e intentá de nuevo.');
+      })
       .finally(() => setLoading(false));
   }
 
@@ -159,7 +85,7 @@ export default function History() {
     <div className={styles.screen}>
       <div className={styles.wrapper}>
         <div className={styles.titleRow}>
-          <div className={styles.iconBox}>⟲</div>
+          <div className={styles.iconBox}>X</div>
           <div>
             <h1 className={styles.title}>Historial</h1>
             <p className={styles.subtitle}>Tus operaciones, con la tasa y la comisión aplicada en cada una</p>
