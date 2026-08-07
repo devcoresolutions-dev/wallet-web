@@ -43,7 +43,7 @@ export async function getWallets(): Promise<Wallet[]> {
 
 /**
  * Obtiene el perfil del usuario actual
- * GET /api/users/me
+ * GET /api/auth/me
  */
 export async function getCurrentUser(): Promise<User> {
   const token = getToken();
@@ -57,8 +57,9 @@ export async function getCurrentUser(): Promise<User> {
     };
   }
 
-  return apiRequest<User>('/api/users/me', {
+  const response = await apiRequest<{ user: User }>('/api/auth/me', {
     method: 'GET',
     token,
   });
+  return response.user;
 }
