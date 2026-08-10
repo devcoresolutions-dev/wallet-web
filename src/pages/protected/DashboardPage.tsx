@@ -18,6 +18,7 @@ import type { Wallet } from '../../types/wallet';
 import type { User } from '../../types/user';
 import type { Transaction } from '../../types/transaction';
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from '../../types/currency';
+import { usePreferences } from '../../contexts/PreferencesContext';
 
 // Tasas de cambio mockeadas para convertir todo a ARS y calcular el Patrimonio Neto
 const CONVERSION_RATES: Record<CurrencyCode, number> = {
@@ -74,6 +75,17 @@ export const DashboardPage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // hideBalanceOnEntry viene de Ajustes (persistido en localStorage).
+  // balanceVisible es un estado LOCAL: arranca según esa preferencia, pero
+  // el usuario lo puede togglear en el momento sin tocar la preferencia guardada.
+  const { hideBalanceOnEntry } = usePreferences();
+  const [balanceVisible, setBalanceVisible] = useState(!hideBalanceOnEntry);
+
+  // Reemplaza un texto por un placeholder cuando el saldo está oculto.
+  function mask(text: string) {
+    return balanceVisible ? text : '••••••';
+  }
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -242,9 +254,18 @@ export const DashboardPage: React.FC = () => {
           <h1 className={styles.greeting}>Hola, {user?.fullName || 'Usuario'}</h1>
           <p className={styles.subtitle}>Este es el estado de tu portafolio financiero hoy</p>
         </div>
-        <button onClick={exportToCSV} className={styles.exportBtn}>
-          X Exportar Reporte CSV
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setBalanceVisible((v) => !v)}
+            className={styles.exportBtn}
+            aria-label={balanceVisible ? 'Ocultar saldo' : 'Mostrar saldo'}
+          >
+            {balanceVisible ? '🙈 Ocultar saldo' : '👁 Mostrar saldo'}
+          </button>
+          <button onClick={exportToCSV} className={styles.exportBtn}>
+            X Exportar Reporte CSV
+          </button>
+        </div>
       </div>
 
       {/* ─── Grid de Resumen Superior ─── */}
@@ -252,12 +273,12 @@ export const DashboardPage: React.FC = () => {
         <div className={styles.card}>
           <span className={styles.cardLabel}>Patrimonio Neto (ARS)</span>
           <span className={styles.cardValue}>
-            {totalPatrimonioARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}
+            {mask(totalPatrimonioARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }))}
           </span>
           <span className={styles.cardSub}>
             Equivalente a{' '}
             <strong style={{ fontFamily: 'var(--font-mono)' }}>
-              {totalPatrimonioUSD.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+              {mask(totalPatrimonioUSD.toLocaleString('en-US', { style: 'currency', currency: 'USD' }))}
             </strong>
           </span>
         </div>
@@ -324,11 +345,13 @@ export const DashboardPage: React.FC = () => {
                     </div>
                     <div>
                       <div className={styles.balanceAmount}>
-                        {amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        {mask(amount.toLocaleString('es-AR', { minimumFractionDigits: 2 }))}
                       </div>
                       {b.currencyCode !== 'ARS' && amount > 0 && (
                         <div className={styles.balanceConverted}>
-                          ≈ {valueInARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}
+                          {balanceVisible
+                            ? `≈ ${valueInARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}`
+                            : '≈ ••••••'}
                         </div>
                       )}
                     </div>
@@ -345,49 +368,55 @@ export const DashboardPage: React.FC = () => {
               <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--success)' }}>+2.4% este mes</span>
             </div>
             <div className={styles.chartContainer}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={historicalData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="day"
-                    stroke="var(--text-subtle)"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="var(--text-subtle)"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: 'var(--bg-card)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 10,
-                      color: 'var(--text)',
-                      fontFamily: 'var(--font-sans)',
-                      fontSize: 12,
-                    }}
-                    formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Patrimonio']}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="valor"
-                    stroke="var(--accent)"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorValor)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {balanceVisible ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={historicalData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="day"
+                      stroke="var(--text-subtle)"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="var(--text-subtle)"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 10,
+                        color: 'var(--text)',
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 12,
+                      }}
+                      formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Patrimonio']}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="valor"
+                      stroke="var(--accent)"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorValor)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-subtle)', fontSize: 13 }}>
+                  Saldo oculto — el gráfico se vuelve a mostrar al activar la visibilidad.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -410,39 +439,45 @@ export const DashboardPage: React.FC = () => {
           <div className={styles.chartCard} style={{ padding: '20px 24px' }}>
             <span className={styles.cardLabel} style={{ marginBottom: 12, display: 'block' }}>Distribución de Activos</span>
             <div className={styles.chartContainer} style={{ height: 160 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={assetDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {assetDistributionData.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: 'var(--bg-card)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 10,
-                      color: 'var(--text)',
-                      fontFamily: 'var(--font-sans)',
-                      fontSize: 11,
-                    }}
-                    formatter={(value, name) => [
-                      chartData.length > 0
-                        ? `${(((value as number) / totalPatrimonioARS) * 100).toFixed(1)}%`
-                        : '0%',
-                      name
-                    ]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {balanceVisible ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={assetDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {assetDistributionData.map((_entry, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 10,
+                        color: 'var(--text)',
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 11,
+                      }}
+                      formatter={(value, name) => [
+                        chartData.length > 0
+                          ? `${(((value as number) / totalPatrimonioARS) * 100).toFixed(1)}%`
+                          : '0%',
+                        name
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-subtle)', fontSize: 13 }}>
+                  Saldo oculto
+                </div>
+              )}
             </div>
             {/* Leyenda del gráfico */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginTop: 12 }}>
@@ -501,7 +536,7 @@ export const DashboardPage: React.FC = () => {
                       </div>
                       <div className={styles.activityRight}>
                         <div className={styles.activityAmount}>
-                          {parseFloat(t.fromAmount).toLocaleString('es-AR')} {t.fromCurrency}
+                          {mask(`${parseFloat(t.fromAmount).toLocaleString('es-AR')} ${t.fromCurrency}`)}
                         </div>
                         <div
                           className={styles.activityStatus}
