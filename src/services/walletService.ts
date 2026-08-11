@@ -10,32 +10,31 @@ function getToken(): string | undefined {
 }
 
 /**
- * Obtiene la información de las billeteras y balances del usuario
- * GET /api/wallets
+ * Obtiene la wallet del usuario con sus balances en las 8 monedas.
+ * GET /api/wallet/balances
+ *
+ * La wallet se deriva del token en el backend: no se envía ningún id.
  */
-export async function getWallets(): Promise<Wallet[]> {
+export async function getWallet(): Promise<Wallet> {
   const token = getToken();
+
   if (token === 'mock-token') {
-    return [
-      {
-        id: 'mock-wallet-123',
-        userId: 'mock-user-123',
-        createdAt: new Date().toISOString(),
-        balances: [
-          { id: 'b1', walletId: 'mock-wallet-123', currencyCode: 'ARS', amount: '850000.00' },
-          { id: 'b2', walletId: 'mock-wallet-123', currencyCode: 'USD', amount: '1250.00' },
-          { id: 'b3', walletId: 'mock-wallet-123', currencyCode: 'EUR', amount: '350.00' },
-          { id: 'b4', walletId: 'mock-wallet-123', currencyCode: 'BRL', amount: '500.00' },
-          { id: 'b5', walletId: 'mock-wallet-123', currencyCode: 'CLP', amount: '0.00' },
-          { id: 'b6', walletId: 'mock-wallet-123', currencyCode: 'COP', amount: '0.00' },
-          { id: 'b7', walletId: 'mock-wallet-123', currencyCode: 'MXN', amount: '0.00' },
-          { id: 'b8', walletId: 'mock-wallet-123', currencyCode: 'PEN', amount: '0.00' }
-        ]
-      }
-    ];
+    return {
+      walletId: 'mock-wallet-123',
+      balances: [
+        { currencyCode: 'ARS', currencyName: 'Argentine Peso', symbol: '$', decimals: 2, amount: '850000.00' },
+        { currencyCode: 'USD', currencyName: 'US Dollar', symbol: '$', decimals: 2, amount: '1250.00' },
+        { currencyCode: 'EUR', currencyName: 'Euro', symbol: '€', decimals: 2, amount: '350.00' },
+        { currencyCode: 'BRL', currencyName: 'Brazilian Real', symbol: 'R$', decimals: 2, amount: '500.00' },
+        { currencyCode: 'CLP', currencyName: 'Chilean Peso', symbol: '$', decimals: 0, amount: '0.00' },
+        { currencyCode: 'COP', currencyName: 'Colombian Peso', symbol: '$', decimals: 2, amount: '0.00' },
+        { currencyCode: 'MXN', currencyName: 'Mexican Peso', symbol: '$', decimals: 2, amount: '0.00' },
+        { currencyCode: 'PEN', currencyName: 'Peruvian Sol', symbol: 'S/', decimals: 2, amount: '0.00' },
+      ],
+    };
   }
 
-  return apiRequest<Wallet[]>('/api/wallets', {
+  return apiRequest<Wallet>('/api/wallet/balances', {
     method: 'GET',
     token,
   });
@@ -47,13 +46,14 @@ export async function getWallets(): Promise<Wallet[]> {
  */
 export async function getCurrentUser(): Promise<User> {
   const token = getToken();
+
   if (token === 'mock-token') {
     return {
       id: 'mock-user-123',
       email: 'test@ewallet.com',
       fullName: 'Tester de eWallet',
       defaultLocalCurrency: 'ARS',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
   }
 
@@ -61,5 +61,6 @@ export async function getCurrentUser(): Promise<User> {
     method: 'GET',
     token,
   });
+
   return response.user;
 }

@@ -69,9 +69,16 @@ export async function getTransactions(): Promise<Transaction[]> {
       }
     ];
   }
-
-  return apiRequest<Transaction[]>('/api/transactions', {
+  
+// El backend devuelve { transactions, pagination }. Se desenvuelve acá para
+  // que quien llame siga recibiendo un array: la paginación no se usa todavía.
+  const response = await apiRequest<{
+    transactions: Transaction[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }>('/api/transactions', {
     method: 'GET',
     token,
   });
+
+  return response.transactions;
 }

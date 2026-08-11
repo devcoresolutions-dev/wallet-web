@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import styles from './ProtectedLayout.module.css';
-import { getWallets } from '../services/walletService';
+import { getWallet } from '../services/walletService';
 import type { Wallet } from '../types/wallet';
 
 interface NavItem {
@@ -27,13 +27,10 @@ export const ProtectedLayout: React.FC = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
 
   // Cargar saldo del usuario para mostrar en el sidebar
+  // Cargar saldo del usuario para mostrar en el sidebar
   useEffect(() => {
-    getWallets()
-      .then((wallets) => {
-        if (wallets && wallets.length > 0) {
-          setWallet(wallets[0]);
-        }
-      })
+    getWallet()
+      .then(setWallet)
       .catch((err) => {
         console.error('Error cargando balances en layout:', err);
       });

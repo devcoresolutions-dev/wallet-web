@@ -12,7 +12,7 @@ import {
   Cell
 } from 'recharts';
 import styles from './DashboardPage.module.css';
-import { getWallets, getCurrentUser } from '../../services/walletService';
+import { getWallet, getCurrentUser } from '../../services/walletService';
 import { getTransactions } from '../../services/transactionService';
 import type { Wallet } from '../../types/wallet';
 import type { User } from '../../types/user';
@@ -82,16 +82,14 @@ export const DashboardPage: React.FC = () => {
         setError(null);
 
         // Ejecutar en paralelo todas las consultas del backend
-        const [userData, walletsData, txData] = await Promise.all([
+        const [userData, walletData, txData] = await Promise.all([
           getCurrentUser(),
-          getWallets(),
+          getWallet(),
           getTransactions(),
         ]);
 
         setUser(userData);
-        if (walletsData && walletsData.length > 0) {
-          setWallet(walletsData[0]);
-        }
+        setWallet(walletData);
         setTransactions(txData);
       } catch (err) {
         console.error('Error cargando información de dashboard:', err);
@@ -314,7 +312,7 @@ export const DashboardPage: React.FC = () => {
                 const valueInARS = amount * (CONVERSION_RATES[b.currencyCode] || 1);
 
                 return (
-                  <div key={b.id} className={styles.balanceItem}>
+                  <div key={b.currencyCode} className={styles.balanceItem}>
                     <div className={styles.currencyInfo}>
                       <div className={styles.flagBox}>{CURRENCY_FLAGS[b.currencyCode]}</div>
                       <div>
