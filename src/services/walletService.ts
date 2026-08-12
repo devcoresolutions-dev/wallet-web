@@ -1,5 +1,5 @@
 import { apiRequest } from './apiClient';
-import type { Wallet } from '../types/wallet';
+import type { Wallet, BalanceResponse } from '../types/wallet';
 import type { User } from '../types/user';
 
 /**
@@ -10,55 +10,63 @@ function getToken(): string | undefined {
 }
 
 /**
- * Obtiene la información de las billeteras y balances del usuario
- * GET /api/wallets
+ * Obtiene los saldos de la billetera del usuario
+ * GET /api/wallet/balances -> devuelve { walletId: string, balances: [...] }
  */
-export async function getWallets(): Promise<Wallet[]> {
+export async function getWalletBalances(): Promise<BalanceResponse> {
   const token = getToken();
-  if (token === 'mock-token') {
-    return [
-      {
-        id: 'mock-wallet-123',
-        userId: 'mock-user-123',
-        createdAt: new Date().toISOString(),
-        balances: [
-          { id: 'b1', walletId: 'mock-wallet-123', currencyCode: 'ARS', amount: '850000.00' },
-          { id: 'b2', walletId: 'mock-wallet-123', currencyCode: 'USD', amount: '1250.00' },
-          { id: 'b3', walletId: 'mock-wallet-123', currencyCode: 'EUR', amount: '350.00' },
-          { id: 'b4', walletId: 'mock-wallet-123', currencyCode: 'BRL', amount: '500.00' },
-          { id: 'b5', walletId: 'mock-wallet-123', currencyCode: 'CLP', amount: '0.00' },
-          { id: 'b6', walletId: 'mock-wallet-123', currencyCode: 'COP', amount: '0.00' },
-          { id: 'b7', walletId: 'mock-wallet-123', currencyCode: 'MXN', amount: '0.00' },
-          { id: 'b8', walletId: 'mock-wallet-123', currencyCode: 'PEN', amount: '0.00' }
-        ]
-      }
-    ];
-  }
 
-  return apiRequest<Wallet[]>('/api/wallets', {
+  return apiRequest<BalanceResponse>('/api/wallet/balances', {
     method: 'GET',
     token,
   });
 }
 
 /**
+ * Mantiene compatibilidad convirtiendo la respuesta de getWalletBalances al tipo Wallet
+ */
+export async function getWallets(): Promise<Wallet[]> {
+  try {
+    const res = await getWalletBalances();
+    return [
+      {
+        id: res.walletId,
+        userId: '',
+        createdAt: new Date().toISOString(),
+        balances: res.balances.map((b) => ({
+          id: `${res.walletId}-${b.currencyCode}`,
+          walletId: res.walletId,
+          currencyCode: b.currencyCode,
+          amount: b.amount,
+          currencyName: b.currencyName,
+          symbol: b.symbol,
+          decimals: b.decimals,
+        })),
+      },
+    ];
+  } catch (err) {
+    console.error('[walletService] Error obteniendo balances:', err);
+    throw err;
+  }
+}
+
+/**
  * Obtiene el perfil del usuario actual
- * GET /api/users/me
+ * GET /api/auth/me -> { user: { id, email, fullName } }
  */
 export async function getCurrentUser(): Promise<User> {
   const token = getToken();
-  if (token === 'mock-token') {
-    return {
-      id: 'mock-user-123',
-      email: 'test@ewallet.com',
-      fullName: 'Tester de eWallet',
-      defaultLocalCurrency: 'ARS',
-      createdAt: new Date().toISOString()
-    };
-  }
 
-  return apiRequest<User>('/api/users/me', {
+  const res = await apiRequest<{ user: { id: string; email: string; fullName: string } }>('/api/auth/me', {
     method: 'GET',
     token,
   });
+
+  return {
+    id: res.user.id,
+    email: res.user.email,
+    fullName: res.user.fullName,
+    defaultLocalCurrency: 'ARS',
+    createdAt: new Date().toISOString(),
+  };
 }

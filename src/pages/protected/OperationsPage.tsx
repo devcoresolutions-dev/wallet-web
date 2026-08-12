@@ -10,8 +10,6 @@ import {
 } from 'recharts';
 import {
   ArrowRightLeft,
-  TrendingUp,
-  TrendingDown,
   ShieldCheck,
   Sparkles,
   Calculator,
@@ -22,22 +20,15 @@ import {
 import styles from './OperationsPage.module.css';
 import { getWallets } from '../../services/walletService';
 import {
-  getExchangeRate,
+  getExchangeRateInfo,
   simulateOperation,
   executeSimulatedTransaction,
   type SimulationResult,
+  type ExchangeRateInfo,
 } from '../../services/simulatorService';
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from '../../types/currency';
 import type { Wallet } from '../../types/wallet';
-
-const TICKER_CURRENCIES: Array<{ from: CurrencyCode; to: CurrencyCode }> = [
-  { from: 'USD', to: 'ARS' },
-  { from: 'EUR', to: 'ARS' },
-  { from: 'BRL', to: 'ARS' },
-  { from: 'USD', to: 'EUR' },
-  { from: 'CLP', to: 'ARS' },
-  { from: 'MXN', to: 'ARS' },
-];
+import { formatCurrencyAmount } from '../../utils/formatters';
 
 export const OperationsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +39,12 @@ export const OperationsPage: React.FC = () => {
   const [fromCurrency, setFromCurrency] = useState<CurrencyCode>('ARS');
   const [toCurrency, setToCurrency] = useState<CurrencyCode>('USD');
   const [fromAmount, setFromAmount] = useState<string>('100000');
+
+  // Estados de cálculo de simulación
+  const [rateInfo, setRateInfo] = useState<ExchangeRateInfo | null>(null);
+  const [simulation, setSimulation] = useState<SimulationResult | null>(null);
+  const [simLoading, setSimLoading] = useState<boolean>(false);
+  const [simError, setSimError] = useState<string | null>(null);
 
   // Estados de Ejecución / Modal / Éxito
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -70,7 +67,60 @@ export const OperationsPage: React.FC = () => {
     loadWallet();
   }, []);
 
-  // Ajustar monedas según el modo seleccionado
+  // Recalcular simulación y tasa real cuando cambian las monedas o el monto
+  useEffect(() => {
+    let isSubscribed = true;
+    async function fetchSimulation() {
+      setSimError(null);
+      if (fromCurrency === toCurrency) {
+        setRateInfo({
+          fromCurrency,
+          toCurrency,
+          rate: 1,
+          inverseRate: 1,
+          feePercentage: 0,
+        });
+        setSimulation({
+          fromCurrency,
+          toCurrency,
+          fromAmount,
+          grossToAmount: fromAmount,
+          feeAmount: '0',
+          feeCurrency: toCurrency,
+          netToAmount: fromAmount,
+          rate: 1,
+          feePercentage: 0,
+        });
+        return;
+      }
+
+      try {
+        setSimLoading(true);
+        const [info, sim] = await Promise.all([
+          getExchangeRateInfo(fromCurrency, toCurrency),
+          simulateOperation(fromCurrency, toCurrency, fromAmount),
+        ]);
+        if (isSubscribed) {
+          setRateInfo(info);
+          setSimulation(sim);
+        }
+      } catch (err: any) {
+        if (isSubscribed) {
+          console.error('Error obteniendo cotizaciones de la API:', err);
+          setSimError(err?.message || 'No se pudo obtener la cotización actual (503 Service Unavailable).');
+          setSimulation(null);
+        }
+      } finally {
+        if (isSubscribed) setSimLoading(false);
+      }
+    }
+
+    fetchSimulation();
+    return () => {
+      isSubscribed = false;
+    };
+  }, [fromCurrency, toCurrency, fromAmount]);
+
   function handleModeChange(mode: 'SWAP' | 'BUY' | 'SELL') {
     setOpMode(mode);
     setSuccessTxId(null);
@@ -84,7 +134,6 @@ export const OperationsPage: React.FC = () => {
     }
   }
 
-  // Intercambiar origen y destino
   function handleSwapCurrencies() {
     const temp = fromCurrency;
     setFromCurrency(toCurrency);
@@ -92,60 +141,54 @@ export const OperationsPage: React.FC = () => {
     setSuccessTxId(null);
   }
 
-  // Calcular balance disponible para la moneda seleccionada
   const currentFromBalance = wallet?.balances.find((b) => b.currencyCode === fromCurrency);
-  const availableBalanceNum = parseFloat(currentFromBalance?.amount || '0');
+  const availableBalanceStr = currentFromBalance?.amount || '0';
+  const availableBalanceNum = parseFloat(availableBalanceStr);
 
-  // Aplicar porcentaje rápido (25%, 50%, 75%, 100%)
   function handlePresetPercent(percent: number) {
     if (availableBalanceNum <= 0) {
       setFromAmount('10000');
       return;
     }
-    const calculated = (availableBalanceNum * (percent / 100)).toFixed(2);
+    const calculated = (availableBalanceNum * (percent / 100)).toString();
     setFromAmount(calculated);
   }
 
-  // Cálculo de la simulación en tiempo real
-  const numericAmount = parseFloat(fromAmount) || 0;
-  const simulation: SimulationResult = simulateOperation(fromCurrency, toCurrency, numericAmount);
-  const rateInfo = getExchangeRate(fromCurrency, toCurrency);
-
-  // Generar datos históricos simulados para el gráfico según el par seleccionado
+  // Gráfico histórico simulado alrededor de la tasa real
+  const currentRate = rateInfo?.rate || 1;
   const chartHistoricalData = [
-    { day: 'Lun', rate: rateInfo.rate * 0.985 },
-    { day: 'Mar', rate: rateInfo.rate * 0.992 },
-    { day: 'Mié', rate: rateInfo.rate * 0.988 },
-    { day: 'Jue', rate: rateInfo.rate * 0.996 },
-    { day: 'Vie', rate: rateInfo.rate * 1.002 },
-    { day: 'Sáb', rate: rateInfo.rate * 0.998 },
-    { day: 'Hoy', rate: rateInfo.rate },
+    { day: 'Lun', rate: currentRate * 0.985 },
+    { day: 'Mar', rate: currentRate * 0.992 },
+    { day: 'Mié', rate: currentRate * 0.988 },
+    { day: 'Jue', rate: currentRate * 0.996 },
+    { day: 'Vie', rate: currentRate * 1.002 },
+    { day: 'Sáb', rate: currentRate * 0.998 },
+    { day: 'Hoy', rate: currentRate },
   ];
 
-  // Ejecución de la transacción simulada
   async function handleConfirmExecution() {
-    if (numericAmount <= 0) return;
+    if (!fromAmount || parseFloat(fromAmount) <= 0) return;
     try {
       setIsExecuting(true);
       setErrorMsg(null);
 
-      const tx = await executeSimulatedTransaction({
+      const res = await executeSimulatedTransaction({
         fromCurrency,
         toCurrency,
-        fromAmount: numericAmount,
+        fromAmount,
       });
 
-      setSuccessTxId(tx.id);
+      setSuccessTxId(res.transaction.id);
       setShowConfirmModal(false);
 
-      // Recargar balance de la billetera para reflejar el cambio inmediato
+      // Recargar balances
       const updatedWallets = await getWallets();
       if (updatedWallets && updatedWallets.length > 0) {
         setWallet(updatedWallets[0]);
       }
     } catch (err: any) {
-      console.error('Error ejecutando simulación:', err);
-      setErrorMsg(err?.message || 'No se pudo completar la simulación. Intenta nuevamente.');
+      console.error('Error ejecutando transacción:', err);
+      setErrorMsg(err?.message || 'No se pudo completar la operación. Intenta nuevamente.');
     } finally {
       setIsExecuting(false);
     }
@@ -153,31 +196,20 @@ export const OperationsPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* ─── Ticker Tasa de Mercado ─── */}
+      {/* ─── Bar de Estado ─── */}
       <div className={styles.tickerBar}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--accent)', fontSize: 12, fontWeight: 700 }}>
           <Activity size={15} />
-          <span>MERCADO EN VIVO:</span>
+          <span>SIMULADOR CON COTIZACIÓN EN VIVO</span>
         </div>
-        {TICKER_CURRENCIES.map((pair, idx) => {
-          const info = getExchangeRate(pair.from, pair.to);
-          const isPos = info.trend24h >= 0;
-          return (
-            <div key={idx} className={styles.tickerItem}>
-              <span className={styles.tickerPair}>{pair.from}/{pair.to}</span>
-              <span className={styles.tickerRate}>
-                {info.rate.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-              </span>
-              <span className={`${styles.tickerTrend} ${isPos ? styles.positive : styles.negative}`}>
-                {isPos ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                {isPos ? `+${info.trend24h}%` : `${info.trend24h}%`}
-              </span>
-            </div>
-          );
-        })}
+        {rateInfo?.rateAgeMinutes !== undefined && (
+          <div style={{ fontSize: 11, color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>
+            Edad de cotización: {rateInfo.rateAgeMinutes} min ({rateInfo.source || 'REAL_FEED'})
+          </div>
+        )}
       </div>
 
-      {/* ─── Grid de Operaciones (Simulador e Información) ─── */}
+      {/* ─── Grid de Operaciones ─── */}
       <div className={styles.operationsGrid}>
         {/* Columna Izquierda: Calculadora / Simulador */}
         <div className={styles.simulatorCard}>
@@ -187,11 +219,10 @@ export const OperationsPage: React.FC = () => {
               Simulador de Operaciones
             </h1>
             <div className={styles.rateBadge}>
-              Spread Estándar: {(rateInfo.feePercentage * 100).toFixed(1)}%
+              Comisión: {rateInfo ? `${(rateInfo.feePercentage * 100).toFixed(1)}%` : '...'}
             </div>
           </div>
 
-          {/* Selector de Modo */}
           <div className={styles.tabContainer}>
             <button
               className={`${styles.tabBtn} ${opMode === 'SWAP' ? styles.tabBtnActive : ''}`}
@@ -213,7 +244,6 @@ export const OperationsPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Banner de Éxito al completar simulación */}
           {successTxId && (
             <div
               style={{
@@ -229,7 +259,7 @@ export const OperationsPage: React.FC = () => {
               <CheckCircle2 size={24} style={{ color: 'var(--success)' }} />
               <div>
                 <div style={{ fontWeight: 700, color: 'var(--success)', fontSize: 14 }}>
-                  ¡Operación Simulada con Éxito!
+                  ¡Operación Realizada con Éxito!
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   ID de Transacción: <span style={{ fontFamily: 'var(--font-mono)' }}>{successTxId}</span>
@@ -254,8 +284,7 @@ export const OperationsPage: React.FC = () => {
             </div>
           )}
 
-          {/* Mensaje de Error */}
-          {errorMsg && (
+          {(errorMsg || simError) && (
             <div
               style={{
                 background: 'rgba(194, 59, 59, 0.15)',
@@ -270,30 +299,27 @@ export const OperationsPage: React.FC = () => {
               }}
             >
               <AlertCircle size={18} />
-              <span>{errorMsg}</span>
+              <span>{errorMsg || simError}</span>
             </div>
           )}
 
-          {/* Campo Desde (Monto a Entregar) */}
           <div className={styles.currencyBox}>
             <div className={styles.currencyBoxHeader}>
               <span>Tú Entregas</span>
               <span className={styles.balanceBadge}>
-                Disponible: {availableBalanceNum.toLocaleString('es-AR', { minimumFractionDigits: 2 })} {fromCurrency}
+                Disponible: {formatCurrencyAmount(availableBalanceStr, fromCurrency, currentFromBalance?.decimals)}
               </span>
             </div>
             <div className={styles.currencyInputRow}>
               <input
-                type="number"
-                min="0"
-                step="any"
+                type="text"
                 className={styles.amountInput}
                 value={fromAmount}
                 onChange={(e) => {
                   setFromAmount(e.target.value);
                   setSuccessTxId(null);
                 }}
-                placeholder="0.00"
+                placeholder="0"
               />
               <select
                 className={styles.currencySelect}
@@ -311,7 +337,6 @@ export const OperationsPage: React.FC = () => {
               </select>
             </div>
 
-            {/* Chips de porcentaje rápido */}
             <div className={styles.presetChips}>
               <button className={styles.chipBtn} onClick={() => handlePresetPercent(25)}>25%</button>
               <button className={styles.chipBtn} onClick={() => handlePresetPercent(50)}>50%</button>
@@ -320,7 +345,6 @@ export const OperationsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Botón de Intercambiar Monedas */}
           <div className={styles.swapWrapper}>
             <button
               className={styles.swapBtn}
@@ -331,18 +355,18 @@ export const OperationsPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Campo Hacia (Monto Recibido Neto) */}
           <div className={styles.currencyBox} style={{ background: 'rgba(0, 0, 0, 0.25)' }}>
             <div className={styles.currencyBoxHeader}>
               <span>Tú Recibes (Neto Estimado)</span>
-              <span>Incluye deducción de comisiones</span>
+              <span>Comisión de {rateInfo ? `${(rateInfo.feePercentage * 100).toFixed(1)}%` : '0%'}</span>
             </div>
             <div className={styles.currencyInputRow}>
               <div className={styles.amountInput} style={{ color: 'var(--accent)' }}>
-                {simulation.netToAmount.toLocaleString('es-AR', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 4,
-                })}
+                {simLoading
+                  ? 'Calculando...'
+                  : simulation
+                  ? formatCurrencyAmount(simulation.netToAmount, toCurrency)
+                  : '-'}
               </div>
               <select
                 className={styles.currencySelect}
@@ -361,23 +385,21 @@ export const OperationsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Botón de Acción Principal */}
           <button
             className={styles.executeBtn}
-            disabled={numericAmount <= 0 || fromCurrency === toCurrency || isExecuting}
+            disabled={!simulation || parseFloat(fromAmount || '0') <= 0 || fromCurrency === toCurrency || isExecuting || !!simError}
             onClick={() => setShowConfirmModal(true)}
           >
             <Sparkles size={18} />
-            <span>Simular y Ejecutar Operación</span>
+            <span>Confirmar Operación</span>
           </button>
         </div>
 
-        {/* Columna Derecha: Desglose y Gráfico de Tendencia */}
+        {/* Columna Derecha: Desglose */}
         <div className={styles.infoColumn}>
-          {/* Tarjeta de Desglose Transparente */}
           <div className={styles.breakdownCard}>
             <div className={styles.cardTitle}>
-              <span>Detalles del Intercambio</span>
+              <span>Detalles de Cotización Real</span>
               <ShieldCheck size={16} style={{ color: 'var(--success)' }} />
             </div>
 
@@ -385,79 +407,44 @@ export const OperationsPage: React.FC = () => {
               <div className={styles.breakdownRow}>
                 <span>Tipo de Cambio Aplicado</span>
                 <span className={styles.breakdownValue}>
-                  1 {fromCurrency} = {rateInfo.rate.toFixed(4)} {toCurrency}
+                  {rateInfo ? `1 ${fromCurrency} = ${Number(rateInfo.rate).toFixed(4)} ${toCurrency}` : '-'}
                 </span>
               </div>
 
               <div className={styles.breakdownRow}>
                 <span>Tasa Inversa</span>
                 <span className={styles.breakdownValue}>
-                  1 {toCurrency} = {rateInfo.inverseRate.toFixed(4)} {fromCurrency}
+                  {rateInfo ? `1 ${toCurrency} = ${Number(rateInfo.inverseRate).toFixed(4)} ${fromCurrency}` : '-'}
                 </span>
               </div>
 
               <div className={styles.breakdownRow}>
                 <span>Monto Bruto</span>
                 <span className={styles.breakdownValue}>
-                  {simulation.grossToAmount.toFixed(2)} {toCurrency}
+                  {simulation ? formatCurrencyAmount(simulation.grossToAmount, toCurrency) : '-'}
                 </span>
               </div>
 
               <div className={styles.breakdownRow} style={{ color: 'var(--danger)' }}>
-                <span>Comisión de Servicio ({simulation.feePercentage.toFixed(1)}%)</span>
+                <span>Comisión ({rateInfo ? (rateInfo.feePercentage * 100).toFixed(1) : 0}%)</span>
                 <span className={styles.breakdownValue}>
-                  -{simulation.feeAmount.toFixed(2)} {toCurrency}
+                  {simulation ? `-${formatCurrencyAmount(simulation.feeAmount, toCurrency)}` : '-'}
                 </span>
               </div>
 
               <div className={`${styles.breakdownRow} ${styles.breakdownRowBold}`}>
                 <span>Total a Acreditar</span>
                 <span className={styles.breakdownValue} style={{ color: 'var(--accent)' }}>
-                  {simulation.netToAmount.toFixed(2)} {toCurrency}
+                  {simulation ? formatCurrencyAmount(simulation.netToAmount, toCurrency) : '-'}
                 </span>
-              </div>
-            </div>
-
-            {/* Banner de protección estimativa */}
-            <div
-              style={{
-                marginTop: 20,
-                background: 'rgba(212, 175, 55, 0.08)',
-                border: '1px dashed var(--accent)',
-                borderRadius: 12,
-                padding: '12px 14px',
-                fontSize: 12,
-                color: 'var(--text-muted)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-              }}
-            >
-              <Sparkles size={20} style={{ color: 'var(--accent)', flexShrink: 0 }} />
-              <div>
-                <strong>Proyección de Cobertura (30 días):</strong> Con esta operación mantienes una reserva estimada de{' '}
-                <span style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-                  +${simulation.estimatedSavingsARS.toFixed(0)} ARS
-                </span>{' '}
-                frente a la fluctuación cambiaria.
               </div>
             </div>
           </div>
 
-          {/* Gráfico de Evolución del Par Seleccionado */}
           <div className={styles.chartCard}>
             <div className={styles.chartHeader}>
               <span className={styles.cardTitle} style={{ margin: 0 }}>
-                Evolución 7 Días ({fromCurrency}/{toCurrency})
-              </span>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: 'var(--font-mono)',
-                  color: rateInfo.trend24h >= 0 ? 'var(--success)' : 'var(--danger)',
-                }}
-              >
-                {rateInfo.trend24h >= 0 ? `+${rateInfo.trend24h}%` : `${rateInfo.trend24h}%`} 24h
+                Evolución ({fromCurrency}/{toCurrency})
               </span>
             </div>
 
@@ -504,19 +491,15 @@ export const OperationsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ─── Modal de Confirmación de Operación ─── */}
-      {showConfirmModal && (
+      {/* Modal de Confirmación */}
+      {showConfirmModal && simulation && (
         <div className={styles.modalBackdrop} onClick={() => !isExecuting && setShowConfirmModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalIconBox}>
               <Calculator size={30} />
             </div>
 
-            <h2 className={styles.modalTitle}>Confirmar Operación</h2>
-
-            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              Estás a punto de simular y registrar la siguiente transacción en tu portafolio:
-            </p>
+            <h2 className={styles.modalTitle}>Confirmar Operación Real</h2>
 
             <div
               style={{
@@ -533,21 +516,21 @@ export const OperationsPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                 <span style={{ color: 'var(--text-subtle)' }}>Monto a entregar:</span>
                 <strong style={{ fontFamily: 'var(--font-mono)' }}>
-                  {numericAmount.toLocaleString('es-AR')} {fromCurrency}
+                  {formatCurrencyAmount(fromAmount, fromCurrency)}
                 </strong>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                 <span style={{ color: 'var(--text-subtle)' }}>Tasa de cambio:</span>
                 <span style={{ fontFamily: 'var(--font-mono)' }}>
-                  1 {fromCurrency} = {rateInfo.rate.toFixed(4)} {toCurrency}
+                  1 {fromCurrency} = {rateInfo?.rate.toFixed(4)} {toCurrency}
                 </span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span style={{ color: 'var(--text-subtle)' }}>Comisión ({simulation.feePercentage.toFixed(1)}%):</span>
+                <span style={{ color: 'var(--text-subtle)' }}>Comisión ({(rateInfo!.feePercentage * 100).toFixed(1)}%):</span>
                 <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--danger)' }}>
-                  -{simulation.feeAmount.toFixed(2)} {toCurrency}
+                  -{formatCurrencyAmount(simulation.feeAmount, toCurrency)}
                 </span>
               </div>
 
@@ -564,7 +547,7 @@ export const OperationsPage: React.FC = () => {
               >
                 <span>Recibirás en tu saldo:</span>
                 <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>
-                  {simulation.netToAmount.toFixed(2)} {toCurrency}
+                  {formatCurrencyAmount(simulation.netToAmount, toCurrency)}
                 </span>
               </div>
             </div>

@@ -18,8 +18,8 @@ import type { Wallet } from '../../types/wallet';
 import type { User } from '../../types/user';
 import type { Transaction } from '../../types/transaction';
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from '../../types/currency';
+import { formatCurrencyAmount } from '../../utils/formatters';
 
-// Tasas de cambio mockeadas para convertir todo a ARS y calcular el Patrimonio Neto
 const CONVERSION_RATES: Record<CurrencyCode, number> = {
   ARS: 1.0,
   USD: 895.5,
@@ -32,14 +32,14 @@ const CONVERSION_RATES: Record<CurrencyCode, number> = {
 };
 
 const CURRENCY_FLAGS: Record<CurrencyCode, string> = {
-  ARS: 'X',
-  USD: 'X',
-  EUR: 'X',
-  BRL: 'X',
-  CLP: 'X',
-  COP: 'X',
-  MXN: 'X',
-  PEN: 'X',
+  ARS: 'ARS',
+  USD: 'USD',
+  EUR: 'EUR',
+  BRL: 'BRL',
+  CLP: 'CLP',
+  COP: 'COP',
+  MXN: 'MXN',
+  PEN: 'PEN',
 };
 
 const CHART_COLORS = ['#D4AF37', '#C23B3B', '#4EBA6F', '#4FACFE', '#C77DFF', '#FF6B6B'];
@@ -51,9 +51,9 @@ const TRANSACTION_TYPE_LABEL = {
 };
 
 const TRANSACTION_TYPE_COLOR = {
-  BUY: { bg: 'rgba(78, 186, 111, 0.1)', color: '#4EBA6F', icon: 'X' },
-  SELL: { bg: 'rgba(194, 59, 59, 0.1)', color: '#C23B3B', icon: 'X' },
-  EXCHANGE: { bg: 'rgba(212, 175, 55, 0.1)', color: '#D4AF37', icon: 'X' },
+  BUY: { bg: 'rgba(78, 186, 111, 0.1)', color: '#4EBA6F', icon: '↓' },
+  SELL: { bg: 'rgba(194, 59, 59, 0.1)', color: '#C23B3B', icon: '↑' },
+  EXCHANGE: { bg: 'rgba(212, 175, 55, 0.1)', color: '#D4AF37', icon: '⇄' },
 };
 
 const TRANSACTION_STATUS_LABEL = {
@@ -77,65 +77,69 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     async function loadDashboardData() {
-      try {
-        setLoading(true);
-        setError(null);
+      setLoading(true);
+      setError(null);
 
-        // Ejecutar en paralelo todas las consultas del backend
-        const [userData, walletsData, txData] = await Promise.all([
-          getCurrentUser(),
-          getWallets(),
-          getTransactions(),
-        ]);
+      // Usar Promise.allSettled para resiliencia: si un endpoint cae, las otras secciones cargan
+      const results = await Promise.allSettled([
+        getCurrentUser(),
+        getWallets(),
+        getTransactions(),
+      ]);
 
-        setUser(userData);
-        if (walletsData && walletsData.length > 0) {
-          setWallet(walletsData[0]);
-        }
-        setTransactions(txData);
-      } catch (err) {
-        console.error('Error cargando información de dashboard:', err);
-        setError('No pudimos conectar con el backend. Verificá que estés autenticado.');
-      } finally {
-        setLoading(false);
+      const [userRes, walletsRes, txRes] = results;
+
+      if (userRes.status === 'fulfilled') {
+        setUser(userRes.value);
       }
+      if (walletsRes.status === 'fulfilled' && walletsRes.value.length > 0) {
+        setWallet(walletsRes.value[0]);
+      }
+      if (txRes.status === 'fulfilled') {
+        setTransactions(txRes.value);
+      }
+
+      if (userRes.status === 'rejected' && walletsRes.status === 'rejected') {
+        setError('No pudimos conectar con el backend. Verificá tu autenticación.');
+      }
+      setLoading(false);
     }
 
     loadDashboardData();
   }, []);
 
   function exportToCSV() {
-    if (!wallet || !user) return;
+    if (!user) return;
 
-    // Construcción del archivo CSV
     let csv = '--- REPORTE FINANCIERO EWALLET ---\n';
     csv += `Usuario,${user.fullName}\n`;
     csv += `Email,${user.email}\n`;
     csv += `Fecha de exportacion,${new Date().toLocaleString('es-AR')}\n\n`;
 
-    csv += '--- RESUMEN ---\n';
-    csv += `Patrimonio Neto (ARS),${totalPatrimonioARS.toFixed(2)}\n`;
-    csv += `Patrimonio Neto (USD),${totalPatrimonioUSD.toFixed(2)}\n\n`;
+    if (wallet) {
+      csv += '--- RESUMEN ---\n';
+      csv += `Patrimonio Neto (ARS),${totalPatrimonioARS.toFixed(2)}\n`;
+      csv += `Patrimonio Neto (USD),${totalPatrimonioUSD.toFixed(2)}\n\n`;
 
-    csv += '--- DETALLE DE SALDOS ---\n';
-    csv += 'Moneda,Nombre,Monto,Equivalente ARS\n';
-    balancesConValor.forEach((b) => {
-      const name = SUPPORTED_CURRENCIES[b.currencyCode]?.name || b.currencyCode;
-      csv += `${b.currencyCode},"${name}",${parseFloat(b.amount).toFixed(2)},${b.valueInARS.toFixed(2)}\n`;
-    });
-    csv += '\n';
+      csv += '--- DETALLE DE SALDOS ---\n';
+      csv += 'Moneda,Nombre,Monto,Equivalente ARS\n';
+      balancesConValor.forEach((b) => {
+        const name = SUPPORTED_CURRENCIES[b.currencyCode]?.name || b.currencyCode;
+        csv += `${b.currencyCode},"${name}",${b.amount},${b.valueInARS.toFixed(2)}\n`;
+      });
+      csv += '\n';
+    }
 
     csv += '--- HISTORIAL DE TRANSACCIONES ---\n';
     csv += 'ID,Fecha,Tipo,Moneda Origen,Moneda Destino,Monto Origen,Monto Destino,Estado\n';
     if (transactions.length > 0) {
       transactions.forEach((t) => {
-        csv += `${t.id},${new Date(t.createdAt).toLocaleDateString('es-AR')},${TRANSACTION_TYPE_LABEL[t.type]},${t.fromCurrency},${t.toCurrency || '-'},${parseFloat(t.fromAmount).toFixed(2)},${t.toAmount ? parseFloat(t.toAmount).toFixed(2) : '-'},${TRANSACTION_STATUS_LABEL[t.status]}\n`;
+        csv += `${t.id},${new Date(t.createdAt).toLocaleDateString('es-AR')},${TRANSACTION_TYPE_LABEL[t.type]},${t.fromCurrency},${t.toCurrency || '-'},${t.fromAmount},${t.toAmount || '-'},${TRANSACTION_STATUS_LABEL[t.status]}\n`;
       });
     } else {
       csv += 'Sin movimientos registrados,,,,,,\n';
     }
 
-    // Descarga del archivo en el navegador
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -163,40 +167,20 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  if (error || !wallet) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.card} style={{ borderColor: 'var(--danger)', padding: 32, textAlign: 'center' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--danger)', marginBottom: 12 }}>¡Error de conexión!</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 20 }}>{error || 'No se encontró una billetera activa.'}</p>
-          <Link
-            to="/login"
-            className={styles.aiActionBtn}
-            style={{ display: 'inline-block', maxWidth: 200, textDecoration: 'none', textAlign: 'center' }}
-          >
-            Ir a Iniciar Sesión
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Cálculos de saldos y conversión
-  const balancesConValor = wallet.balances.map((b) => {
-    const amount = parseFloat(b.amount);
+  const balancesConValor = wallet?.balances.map((b) => {
+    const amountNum = parseFloat(b.amount) || 0;
     const rate = CONVERSION_RATES[b.currencyCode] || 1;
-    const valueInARS = amount * rate;
+    const valueInARS = amountNum * rate;
     return {
       ...b,
-      amountNum: amount,
+      amountNum,
       valueInARS,
     };
-  });
+  }) || [];
 
   const totalPatrimonioARS = balancesConValor.reduce((sum, b) => sum + b.valueInARS, 0);
   const totalPatrimonioUSD = totalPatrimonioARS / CONVERSION_RATES.USD;
 
-  // Filtrar activos con saldo mayor a 0 para el gráfico de distribución
   const chartData = balancesConValor
     .filter((b) => b.amountNum > 0)
     .map((b) => ({
@@ -204,12 +188,10 @@ export const DashboardPage: React.FC = () => {
       value: b.valueInARS,
     }));
 
-  // Si no hay saldo en ninguna moneda, mostramos ARS como 100% para evitar gráficos vacíos
   const assetDistributionData = chartData.length > 0
     ? chartData
     : [{ name: 'ARS', value: 1 }];
 
-  // Gráfico de línea histórica (Mockeado en base al saldo actual para dar realismo visual)
   const historicalData = [
     { day: 'Lun', valor: totalPatrimonioARS * 0.96 },
     { day: 'Mar', valor: totalPatrimonioARS * 0.98 },
@@ -220,18 +202,16 @@ export const DashboardPage: React.FC = () => {
     { day: 'Dom', valor: totalPatrimonioARS },
   ];
 
-  // Obtener las últimas 3 transacciones reales
   const recentTransactions = transactions.slice(0, 3);
 
-  // Sugerencia dinámica de la IA en base a los saldos
-  const mainBalanceARS = wallet.balances.find((b) => b.currencyCode === 'ARS')?.amount || '0.00';
+  const mainBalanceARS = wallet?.balances.find((b) => b.currencyCode === 'ARS')?.amount || '0';
   const mainBalanceARSNum = parseFloat(mainBalanceARS);
 
-  let aiSuggestion = '¡Billetera vacía! Realiza un depósito o ingresa fondos para comenzar a operar con distintas monedas.';
+  let aiSuggestion = '¡Billetera vacía! Realizá una operación para comenzar a diversificar en distintas monedas.';
   if (mainBalanceARSNum > 500000) {
-    aiSuggestion = 'Tienes una cantidad considerable de Pesos Argentinos. El dólar cotiza estable esta semana; podrías considerar diversificar un 20% a USD para resguardar tu capital.';
+    aiSuggestion = 'Tenés una cantidad considerable de Pesos Argentinos. El dólar cotiza estable esta semana; podrías considerar diversificar para resguardar tu capital.';
   } else if (mainBalanceARSNum > 0) {
-    aiSuggestion = '¡Buen comienzo! Recuerda monitorear nuestra sección de cotizaciones en tiempo real para aprovechar el mejor momento de intercambio.';
+    aiSuggestion = '¡Buen comienzo! Recordá monitorear nuestra sección de cotizaciones en tiempo real para aprovechar el mejor momento.';
   }
 
   return (
@@ -243,21 +223,27 @@ export const DashboardPage: React.FC = () => {
           <p className={styles.subtitle}>Este es el estado de tu portafolio financiero hoy</p>
         </div>
         <button onClick={exportToCSV} className={styles.exportBtn}>
-          X Exportar Reporte CSV
+          Exportar Reporte CSV
         </button>
       </div>
+
+      {error && (
+        <div style={{ padding: '12px 16px', background: 'rgba(194, 59, 59, 0.15)', border: '1px solid var(--danger)', borderRadius: 12, marginBottom: 20, color: 'var(--danger)', fontSize: 13 }}>
+          {error}
+        </div>
+      )}
 
       {/* ─── Grid de Resumen Superior ─── */}
       <div className={styles.summaryGrid}>
         <div className={styles.card}>
           <span className={styles.cardLabel}>Patrimonio Neto (ARS)</span>
           <span className={styles.cardValue}>
-            {totalPatrimonioARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}
+            {formatCurrencyAmount(totalPatrimonioARS.toString(), 'ARS')}
           </span>
           <span className={styles.cardSub}>
             Equivalente a{' '}
             <strong style={{ fontFamily: 'var(--font-mono)' }}>
-              {totalPatrimonioUSD.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+              {formatCurrencyAmount(totalPatrimonioUSD.toString(), 'USD')}
             </strong>
           </span>
         </div>
@@ -265,10 +251,10 @@ export const DashboardPage: React.FC = () => {
         <div className={styles.card}>
           <span className={styles.cardLabel}>Saldos Activos</span>
           <span className={styles.cardValue} style={{ fontSize: 24 }}>
-            {wallet.balances.filter((b) => parseFloat(b.amount) > 0).length} Monedas
+            {wallet ? wallet.balances.filter((b) => parseFloat(b.amount) > 0).length : 0} Monedas
           </span>
           <span className={styles.cardSub}>
-            De {wallet.balances.length} monedas soportadas
+            De {wallet ? wallet.balances.length : 0} monedas soportadas
           </span>
         </div>
 
@@ -296,22 +282,20 @@ export const DashboardPage: React.FC = () => {
 
       {/* ─── Layout de Dos Columnas del Dashboard ─── */}
       <div className={styles.dashboardBody}>
-        {/* Columna Izquierda (Saldos y Gráfico de Patrimonio) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Desglose de saldos reales */}
           <div>
             <h2 className={styles.sectionTitle}>Tus Activos</h2>
             <div className={styles.balancesGrid}>
-              {wallet.balances.map((b) => {
+              {wallet?.balances.map((b) => {
                 const currency = SUPPORTED_CURRENCIES[b.currencyCode];
-                const amount = parseFloat(b.amount);
+                const amountNum = parseFloat(b.amount) || 0;
 
-                // Mostrar solo monedas activas o las principales (ARS, USD, EUR) y ocultar el resto si están en 0
-                if (amount === 0 && b.currencyCode !== 'ARS' && b.currencyCode !== 'USD' && b.currencyCode !== 'EUR') {
+                if (amountNum === 0 && b.currencyCode !== 'ARS' && b.currencyCode !== 'USD' && b.currencyCode !== 'EUR') {
                   return null;
                 }
 
-                const valueInARS = amount * (CONVERSION_RATES[b.currencyCode] || 1);
+                const valueInARS = amountNum * (CONVERSION_RATES[b.currencyCode] || 1);
 
                 return (
                   <div key={b.id} className={styles.balanceItem}>
@@ -319,16 +303,16 @@ export const DashboardPage: React.FC = () => {
                       <div className={styles.flagBox}>{CURRENCY_FLAGS[b.currencyCode]}</div>
                       <div>
                         <div className={styles.currencyCode}>{b.currencyCode}</div>
-                        <div className={styles.currencyName}>{currency?.name || b.currencyCode}</div>
+                        <div className={styles.currencyName}>{b.currencyName || currency?.name || b.currencyCode}</div>
                       </div>
                     </div>
                     <div>
                       <div className={styles.balanceAmount}>
-                        {amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        {formatCurrencyAmount(b.amount, b.currencyCode, b.decimals)}
                       </div>
-                      {b.currencyCode !== 'ARS' && amount > 0 && (
+                      {b.currencyCode !== 'ARS' && amountNum > 0 && (
                         <div className={styles.balanceConverted}>
-                          ≈ {valueInARS.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}
+                          ≈ {formatCurrencyAmount(valueInARS.toString(), 'ARS')}
                         </div>
                       )}
                     </div>
@@ -342,7 +326,7 @@ export const DashboardPage: React.FC = () => {
           <div className={styles.chartCard}>
             <div className={styles.chartHeader}>
               <span className={styles.cardLabel}>Tendencia de Patrimonio</span>
-              <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--success)' }}>+2.4% este mes</span>
+              <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--success)' }}>Feed en vivo</span>
             </div>
             <div className={styles.chartContainer}>
               <ResponsiveContainer width="100%" height="100%">
@@ -392,13 +376,13 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Columna Derecha (Sugerencias AI, Distribución y Actividad Reciente) */}
+        {/* Columna Derecha */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Sugerencias de la IA */}
           <div className={styles.aiCard}>
             <div className={styles.aiHeader}>
               <div className={styles.aiHeaderDot} />
-              <span>Sugerencia del Asistente Gemini</span>
+              <span>Asistente eWallet</span>
             </div>
             <p className={styles.aiText}>{aiSuggestion}</p>
             <Link to="/chatbot" style={{ width: '100%' }}>
@@ -406,7 +390,7 @@ export const DashboardPage: React.FC = () => {
             </Link>
           </div>
 
-          {/* Gráfico circular de distribución de activos */}
+          {/* Gráfico circular */}
           <div className={styles.chartCard} style={{ padding: '20px 24px' }}>
             <span className={styles.cardLabel} style={{ marginBottom: 12, display: 'block' }}>Distribución de Activos</span>
             <div className={styles.chartContainer} style={{ height: 160 }}>
@@ -435,7 +419,7 @@ export const DashboardPage: React.FC = () => {
                       fontSize: 11,
                     }}
                     formatter={(value, name) => [
-                      chartData.length > 0
+                      chartData.length > 0 && totalPatrimonioARS > 0
                         ? `${(((value as number) / totalPatrimonioARS) * 100).toFixed(1)}%`
                         : '0%',
                       name
@@ -444,7 +428,6 @@ export const DashboardPage: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            {/* Leyenda del gráfico */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginTop: 12 }}>
               {assetDistributionData.map((entry, index) => (
                 <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
@@ -501,7 +484,7 @@ export const DashboardPage: React.FC = () => {
                       </div>
                       <div className={styles.activityRight}>
                         <div className={styles.activityAmount}>
-                          {parseFloat(t.fromAmount).toLocaleString('es-AR')} {t.fromCurrency}
+                          {formatCurrencyAmount(t.fromAmount, t.fromCurrency)}
                         </div>
                         <div
                           className={styles.activityStatus}
