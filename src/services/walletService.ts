@@ -3,15 +3,15 @@ import type { Wallet, BalanceResponse } from '../types/wallet';
 import type { User } from '../types/user';
 
 /**
- * Obtiene el token guardado en localStorage
+ * Obtiene el token guardado en localStorage.
  */
 function getToken(): string | undefined {
   return localStorage.getItem('token') || undefined;
 }
 
 /**
- * Obtiene los saldos de la billetera del usuario
- * GET /api/wallet/balances -> devuelve { walletId: string, balances: [...] }
+ * Obtiene los saldos de la billetera del usuario.
+ * GET /api/wallet/balances
  */
 export async function getWalletBalances(): Promise<BalanceResponse> {
   const token = getToken();
@@ -23,11 +23,13 @@ export async function getWalletBalances(): Promise<BalanceResponse> {
 }
 
 /**
- * Mantiene compatibilidad convirtiendo la respuesta de getWalletBalances al tipo Wallet
+ * Mantiene compatibilidad convirtiendo la respuesta
+ * de getWalletBalances al tipo Wallet.
  */
 export async function getWallets(): Promise<Wallet[]> {
   try {
     const res = await getWalletBalances();
+
     return [
       {
         id: res.walletId,
@@ -45,19 +47,28 @@ export async function getWallets(): Promise<Wallet[]> {
       },
     ];
   } catch (err) {
-    console.error('[walletService] Error obteniendo balances:', err);
+    console.error(
+      '[walletService] Error obteniendo balances:',
+      err
+    );
     throw err;
   }
 }
 
 /**
- * Obtiene el perfil del usuario actual
- * GET /api/auth/me -> { user: { id, email, fullName } }
+ * Obtiene el perfil del usuario actual.
+ * GET /api/auth/me
  */
 export async function getCurrentUser(): Promise<User> {
   const token = getToken();
 
-  const res = await apiRequest<{ user: { id: string; email: string; fullName: string } }>('/api/auth/me', {
+  const res = await apiRequest<{
+    user: {
+      id: string;
+      email: string;
+      fullName: string;
+    };
+  }>('/api/auth/me', {
     method: 'GET',
     token,
   });
@@ -69,4 +80,64 @@ export async function getCurrentUser(): Promise<User> {
     defaultLocalCurrency: 'ARS',
     createdAt: new Date().toISOString(),
   };
+}
+
+/**
+ * Respuesta del endpoint real de depósito.
+ * POST /api/wallet/deposit
+ */
+export interface DepositResponse {
+  transaction: {
+    id: string;
+    type: 'DEPOSIT';
+    status: string;
+    fromCurrency: string;
+    toCurrency: string;
+    fromAmount: string;
+    toAmount: string;
+    feeAmount: string;
+    feeRate: string;
+    exchangeRate: string;
+    rateSource: string;
+    rateFetchedAt: string;
+    createdAt: string;
+  };
+  balances: Array<{
+    currencyCode: string;
+    currencyName: string;
+    symbol: string;
+    decimals: number;
+    amount: string;
+  }>;
+}
+
+/**
+ * Ingresa saldo ficticio en la wallet del usuario autenticado.
+ *
+ * POST /api/wallet/deposit
+ *
+ * El backend obtiene la wallet desde el JWT,
+ * por lo que no se envía walletId.
+ */
+export async function depositBalance(
+  currency: string,
+  amount: string
+): Promise<DepositResponse> {
+  const token = getToken();
+
+  if (!token) {
+    throw new Error('Usuario no autenticado.');
+  }
+
+  return apiRequest<DepositResponse>(
+    '/api/wallet/deposit',
+    {
+      method: 'POST',
+      token,
+      body: {
+        currency,
+        amount,
+      },
+    }
+  );
 }
