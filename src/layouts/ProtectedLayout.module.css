@@ -18,9 +18,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: rgba(28, 28, 28, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(28, 28, 28, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
 }
 
@@ -31,10 +31,10 @@
 }
 
 .logoIcon {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,9 +47,15 @@
 
 .logoText {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text);
+}
+
+.mobileHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .pageIndicator {
@@ -63,12 +69,203 @@
   text-transform: capitalize;
 }
 
+.mobileNotificationBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.mobileNotificationBtnActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+
 /* Área de contenido principal */
 
 .mainContent {
   flex: 1;
-  padding: 20px 16px 100px; /* Extra bottom padding for mobile navigation space */
+  padding: 20px 16px 100px;
   overflow-y: auto;
+}
+
+/* Widget Flotante de IA para Móvil */
+
+.floatingAiWidget {
+  position: fixed;
+  bottom: 72px;
+  right: 16px;
+  z-index: 60;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, #B8860B 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-base-charcoal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floatingAiWidget:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+}
+
+.floatingAiBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--primary-btn);
+  color: #fff;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 10px;
+  border: 1px solid var(--bg);
+}
+
+/* Mini Sheet / Drawer de IA en Móvil */
+
+.miniAiBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.miniAiDrawer {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 80vh;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+.miniAiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 12px;
+}
+
+.miniAiTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.miniAiCloseBtn {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-subtle);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.miniAiPromptBtn {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.miniAiPromptBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fullChatBtn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent) 0%, #B8860B 100%);
+  border: none;
+  color: var(--color-base-charcoal);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 /* Barra de navegación inferior en móvil */
@@ -156,12 +353,15 @@
     display: none;
   }
 
+  .floatingAiWidget {
+    display: none;
+  }
+
   .mainContent {
     padding: 40px 60px;
     height: 100vh;
   }
 
-  /* Sidebar display on desktop */
   .desktopSidebar {
     display: flex;
     flex-direction: column;
@@ -280,7 +480,7 @@
     font-size: 20px;
     color: var(--text);
   }
-  
+
   .sidebarFooterSub {
     font-family: var(--font-mono);
     font-size: 11px;
