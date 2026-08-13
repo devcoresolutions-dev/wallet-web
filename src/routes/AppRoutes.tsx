@@ -23,6 +23,7 @@ import RateAnalyticsPage from '../pages/protected/RateAnalyticsPage';
 import NotificationsPage from '../pages/protected/NotificationsPage';
 import ChatbotPage from '../pages/protected/ChatbotPage';
 import SettingsPage from '../pages/protected/SettingsPage';
+import EnterBalancePage from '../pages/protected/EnterBalancePage';
 
 // 404
 import NotFoundPage from '../pages/NotFoundPage';
@@ -50,6 +51,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/chatbot" element={<ChatbotPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/EnterBalancePage" element={<EnterBalancePage />} />
           </Route>
         </Route>
 
