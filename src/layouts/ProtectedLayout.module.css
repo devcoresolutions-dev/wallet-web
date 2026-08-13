@@ -21,7 +21,7 @@
   background: rgba(28, 28, 28, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-b: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .logoArea {

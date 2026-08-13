@@ -36,7 +36,7 @@ export interface EnterBalanceProps {
   onBack?: () => void;
 }
 
-export default function EnterBalance({ onSuccess, onBack }: EnterBalanceProps) {
+export default function EnterBalance({ onSuccess  }: EnterBalanceProps) {
   const [selected, setSelected] = useState<Currency>(CURRENCIES[0]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [amount, setAmount] = useState('');
