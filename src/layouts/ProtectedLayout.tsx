@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Outlet,
+  NavLink,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import {
   LayoutDashboard,
   Calculator,
@@ -26,22 +31,64 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/dashboard', label: 'Inicio', icon: <LayoutDashboard size={18} />, mobile: true },
-  { path: '/operations', label: 'Operar', icon: <Calculator size={18} />, mobile: true },
-  { path: '/transactions', label: 'Historial', icon: <History size={18} />, mobile: true },
-  { path: '/analytics', label: 'Cotizaciones', icon: <TrendingUp size={18} />, mobile: false },
-  { path: '/chatbot', label: 'Chat AI', icon: <Bot size={18} />, mobile: false },
-  { path: '/notifications', label: 'Avisos', icon: <Bell size={18} />, mobile: false },
-  { path: '/settings', label: 'Ajustes', icon: <Settings size={18} />, mobile: true },
+  {
+    path: '/dashboard',
+    label: 'Inicio',
+    icon: <LayoutDashboard size={18} />,
+    mobile: true,
+  },
+  {
+    path: '/operations',
+    label: 'Operar',
+    icon: <Calculator size={18} />,
+    mobile: true,
+  },
+  {
+    path: '/transactions',
+    label: 'Historial',
+    icon: <History size={18} />,
+    mobile: true,
+  },
+  {
+    path: '/analytics',
+    label: 'Cotizaciones',
+    icon: <TrendingUp size={18} />,
+    mobile: false,
+  },
+  {
+    path: '/chatbot',
+    label: 'Chat AI',
+    icon: <Bot size={18} />,
+    mobile: false,
+  },
+  {
+    path: '/notifications',
+    label: 'Avisos',
+    icon: <Bell size={18} />,
+    mobile: false,
+  },
+  {
+    path: '/settings',
+    label: 'Ajustes',
+    icon: <Settings size={18} />,
+    mobile: true,
+  },
+  {
+    path: '/EnterBalancePage',
+    label: 'Ingresar Saldo',
+    icon: <WalletIcon size={18} />,
+    mobile: true,
+  },
 ];
 
 export const ProtectedLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [showMiniAi, setShowMiniAi] = useState(false);
 
-  // Cargar saldo del usuario para mostrar en el sidebar
+  // Cargar saldo del usuario para mostrar en el sidebar.
   useEffect(() => {
     getWallets()
       .then((wallets) => {
@@ -50,18 +97,34 @@ export const ProtectedLayout: React.FC = () => {
         }
       })
       .catch((err) => {
-        console.error('Error cargando balances en layout:', err);
+        console.error(
+          'Error cargando balances en layout:',
+          err
+        );
       });
-  }, [location.pathname]); // Recargar al cambiar de página para reflejar movimientos
+  }, [location.pathname]);
 
   const currentPath = location.pathname;
-  const currentItem = NAV_ITEMS.find((item) => item.path === currentPath);
-  const pageTitle = currentItem ? currentItem.label : 'App';
 
-  // Buscar saldo ARS o el primero disponible
-  const arsBalance = wallet?.balances.find((b) => b.currencyCode === 'ARS');
+  const currentItem = NAV_ITEMS.find(
+    (item) => item.path === currentPath
+  );
+
+  const pageTitle = currentItem
+    ? currentItem.label
+    : 'App';
+
+  const arsBalance = wallet?.balances.find(
+    (b) => b.currencyCode === 'ARS'
+  );
+
   const mainBalanceFormatted = arsBalance
-    ? `${parseFloat(arsBalance.amount).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}`
+    ? `${parseFloat(
+        arsBalance.amount
+      ).toLocaleString('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+      })}`
     : '$ 0,00';
 
   function handleLogout() {
@@ -82,9 +145,21 @@ export const ProtectedLayout: React.FC = () => {
           <div className={styles.sidebarLogoIcon}>
             <WalletIcon size={20} />
           </div>
+
           <div>
-            <div className={styles.sidebarLogoText}>eWallet</div>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-subtle)' }}>DevCore</span>
+            <div className={styles.sidebarLogoText}>
+              eWallet
+            </div>
+
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: 'var(--text-subtle)',
+              }}
+            >
+              DevCore
+            </span>
           </div>
         </div>
 
@@ -94,26 +169,49 @@ export const ProtectedLayout: React.FC = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`
+                `${styles.sidebarLink} ${
+                  isActive
+                    ? styles.sidebarLinkActive
+                    : ''
+                }`
               }
             >
-              <span className={styles.sidebarLinkIcon}>{item.icon}</span>
+              <span
+                className={styles.sidebarLinkIcon}
+              >
+                {item.icon}
+              </span>
+
               <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <div className={styles.sidebarFooterLabel}>Saldo principal (ARS)</div>
-          <div className={styles.sidebarFooterValue}>{mainBalanceFormatted}</div>
-          <div className={styles.sidebarFooterSub}>Disponible</div>
+          <div
+            className={styles.sidebarFooterLabel}
+          >
+            Saldo principal (ARS)
+          </div>
+
+          <div
+            className={styles.sidebarFooterValue}
+          >
+            {mainBalanceFormatted}
+          </div>
+
+          <div className={styles.sidebarFooterSub}>
+            Disponible
+          </div>
+
           <button
             onClick={handleLogout}
             style={{
               marginTop: 12,
               width: '100%',
               background: 'transparent',
-              border: '1px solid var(--border)',
+              border:
+                '1px solid var(--border)',
               borderRadius: '8px',
               padding: '8px',
               fontSize: '11px',
@@ -138,22 +236,32 @@ export const ProtectedLayout: React.FC = () => {
           <div className={styles.logoIcon}>
             <WalletIcon size={18} />
           </div>
-          <span className={styles.logoText}>eWallet</span>
+
+          <span className={styles.logoText}>
+            eWallet
+          </span>
         </div>
 
         <div className={styles.mobileHeaderRight}>
-          <div className={styles.pageIndicator}>{pageTitle}</div>
+          <div className={styles.pageIndicator}>
+            {pageTitle}
+          </div>
 
-          {/* Botoncito con la campanita para notificaciones en Móvil */}
           <NavLink
             to="/notifications"
             className={({ isActive }) =>
-              `${styles.mobileNotificationBtn} ${isActive ? styles.mobileNotificationBtnActive : ''}`
+              `${styles.mobileNotificationBtn} ${
+                isActive
+                  ? styles.mobileNotificationBtnActive
+                  : ''
+              }`
             }
             title="Centro de Avisos y Notificaciones"
           >
             <Bell size={18} />
-            <span className={styles.notificationBadge} />
+            <span
+              className={styles.notificationBadge}
+            />
           </NavLink>
         </div>
       </header>
@@ -163,47 +271,96 @@ export const ProtectedLayout: React.FC = () => {
         <Outlet />
       </main>
 
-      {/* ─── Widget Flotante de IA para Móvil (Visible en cualquier página) ─── */}
+      {/* ─── Widget Flotante de IA para Móvil ─── */}
       <button
         className={styles.floatingAiWidget}
         onClick={() => setShowMiniAi(true)}
         title="Consultar al Asistente IA"
       >
         <Bot size={22} />
-        <span className={styles.floatingAiBadge}>AI</span>
+        <span className={styles.floatingAiBadge}>
+          AI
+        </span>
       </button>
 
-      {/* ─── Mini Sheet / Drawer Rápido de IA en Móvil ─── */}
+      {/* ─── Mini Sheet / Drawer de IA ─── */}
       {showMiniAi && (
-        <div className={styles.miniAiBackdrop} onClick={() => setShowMiniAi(false)}>
-          <div className={styles.miniAiDrawer} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={styles.miniAiBackdrop}
+          onClick={() => setShowMiniAi(false)}
+        >
+          <div
+            className={styles.miniAiDrawer}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
             <div className={styles.miniAiHeader}>
-              <h3 className={styles.miniAiTitle}>
-                <Sparkles size={18} style={{ color: 'var(--accent)' }} />
+              <h3
+                className={styles.miniAiTitle}
+              >
+                <Sparkles
+                  size={18}
+                  style={{
+                    color: 'var(--accent)',
+                  }}
+                />
                 Gemini Financial Assistant
               </h3>
-              <button className={styles.miniAiCloseBtn} onClick={() => setShowMiniAi(false)}>
+
+              <button
+                className={styles.miniAiCloseBtn}
+                onClick={() =>
+                  setShowMiniAi(false)
+                }
+              >
                 <X size={16} />
               </button>
             </div>
 
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-              ¿Qué deseas consultar sobre tus finanzas en este momento?
+            <p
+              style={{
+                fontSize: 13,
+                color: 'var(--text-muted)',
+                margin: 0,
+              }}
+            >
+              ¿Qué deseas consultar sobre tus
+              finanzas en este momento?
             </p>
 
-            <button className={styles.miniAiPromptBtn} onClick={handleOpenFullChat}>
-              <span>📊 Analizar el rendimiento de mis saldos</span>
+            <button
+              className={styles.miniAiPromptBtn}
+              onClick={handleOpenFullChat}
+            >
+              <span>
+                📊 Analizar el rendimiento de mis
+                saldos
+              </span>
+
               <ArrowRight size={14} />
             </button>
 
-            <button className={styles.miniAiPromptBtn} onClick={handleOpenFullChat}>
-              <span>💵 Cotizaciones y mejor momento de compra</span>
+            <button
+              className={styles.miniAiPromptBtn}
+              onClick={handleOpenFullChat}
+            >
+              <span>
+                💵 Cotizaciones y mejor momento de
+                compra
+              </span>
+
               <ArrowRight size={14} />
             </button>
 
-            <button className={styles.fullChatBtn} onClick={handleOpenFullChat}>
+            <button
+              className={styles.fullChatBtn}
+              onClick={handleOpenFullChat}
+            >
               <Bot size={18} />
-              <span>Abrir Chat Completo de IA</span>
+              <span>
+                Abrir Chat Completo de IA
+              </span>
             </button>
           </div>
         </div>
@@ -211,16 +368,27 @@ export const ProtectedLayout: React.FC = () => {
 
       {/* ─── Mobile Bottom Navigation ─── */}
       <nav className={styles.bottomNav}>
-        {NAV_ITEMS.filter((item) => item.mobile).map((item) => (
+        {NAV_ITEMS.filter(
+          (item) => item.mobile
+        ).map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `${styles.navTab} ${isActive ? styles.navTabActive : ''}`
+              `${styles.navTab} ${
+                isActive
+                  ? styles.navTabActive
+                  : ''
+              }`
             }
           >
-            <div className={styles.tabIconBox}>{item.icon}</div>
-            <span className={styles.tabLabel}>{item.label}</span>
+            <div className={styles.tabIconBox}>
+              {item.icon}
+            </div>
+
+            <span className={styles.tabLabel}>
+              {item.label}
+            </span>
           </NavLink>
         ))}
       </nav>
