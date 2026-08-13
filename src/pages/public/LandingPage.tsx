@@ -1,37 +1,46 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Wallet,
+  Coins,
+  Zap,
+  BarChart2,
+  ShieldCheck,
+  Bot,
+  BellRing,
+} from 'lucide-react';
 import styles from './LandingPage.module.css';
 
 // Datos de la página
 
-const FEATURES = [
+const FEATURES: { icon: React.ReactNode; title: string; desc: string }[] = [
   {
-    icon: 'x',
+    icon: <Coins size={22} />,
     title: 'Multi-Moneda',
     desc: 'Operá con MXN, USD, EUR y más desde una sola billetera unificada.',
   },
   {
-    icon: 'x',
+    icon: <Zap size={22} />,
     title: 'Transferencias Instantáneas',
     desc: 'Enviá y recibí dinero al instante, sin importar la moneda ni la ubicación.',
   },
   {
-    icon: 'x',
+    icon: <BarChart2 size={22} />,
     title: 'Analítica en Tiempo Real',
     desc: 'Visualizá tus gastos, ingresos y tendencias con gráficos interactivos.',
   },
   {
-    icon: 'x',
+    icon: <ShieldCheck size={22} />,
     title: 'Seguridad Avanzada',
     desc: 'Cifrado de extremo a extremo, autenticación de dos factores y más.',
   },
   {
-    icon: 'x',
+    icon: <Bot size={22} />,
     title: 'Asistente IA',
     desc: 'Nuestro chatbot inteligente resuelve tus dudas y optimiza tu flujo financiero.',
   },
   {
-    icon: 'x',
+    icon: <BellRing size={22} />,
     title: 'Notificaciones Inteligentes',
     desc: 'Alertas personalizadas para movimientos, tipos de cambio y vencimientos.',
   },
@@ -56,9 +65,9 @@ const STEPS = [
 ];
 
 const STATS = [
-  { value: 'xK+', label: 'Usuarios Activos' },
-  { value: 'xM+', label: 'Transacciones Procesadas' },
-  { value: 'x%', label: 'Uptime Garantizado' },
+  { value: '25K+', label: 'Usuarios Activos' },
+  { value: '5M+', label: 'Transacciones Procesadas' },
+  { value: '99.99%', label: 'Uptime Garantizado' },
 ];
 
 //Scroll helper
@@ -79,8 +88,8 @@ export const LandingPage: React.FC = () => {
       {/* Barra de navegación */}
       <nav className={styles.navbar} id="landing-navbar">
         <Link to="/" className={styles.navLogo}>
-          <span className={styles.navLogoIcon}>◫</span>
-          <span className={styles.navLogoText}>x</span>
+          <Wallet size={22} className={styles.navLogoIcon} />
+          <span className={styles.navLogoText}>DevPocket</span>
         </Link>
 
         <div className={styles.navLinks}>
@@ -191,7 +200,7 @@ export const LandingPage: React.FC = () => {
             Empezá a Controlar tu Dinero Hoy
           </h2>
           <p className={styles.ctaDesc}>
-            Unite a miles de usuarios que ya confían en x para sus
+            Unite a miles de usuarios que ya confían en DevPocket para sus
             finanzas digitales. Registrate gratis y descubrí una nueva forma de
             operar.
           </p>
@@ -203,6 +212,14 @@ export const LandingPage: React.FC = () => {
               Ya Tengo Cuenta
             </Link>
           </div>
+          <div className={styles.ctaContact}>
+            <p className={styles.contactText}>
+              ¿Tenés alguna consulta o necesitas soporte? Contactanos en{' '}
+              <a href="mailto:teamdevcoresolutions@gmail.com" className={styles.contactEmail}>
+                teamdevcoresolutions@gmail.com
+              </a>
+            </p>
+          </div>
         </div>
       </section>
 
@@ -210,8 +227,8 @@ export const LandingPage: React.FC = () => {
       <footer className={styles.footer} id="landing-footer">
         <div className={styles.footerInner}>
           <div className={styles.footerBrand}>
-            <span className={styles.footerLogoIcon}>◫</span>
-            <span className={styles.footerBrandText}>x</span>
+            <Wallet size={20} className={styles.footerLogoIcon} />
+            <span className={styles.footerBrandText}>DevPocket</span>
           </div>
 
           <div className={styles.footerLinks}>
@@ -230,7 +247,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <p className={styles.footerCopy}>
-            © {new Date().getFullYear()} x. Todos los derechos reservados.
+            © {new Date().getFullYear()} DevPocket. Todos los derechos reservados.
           </p>
         </div>
       </footer>
