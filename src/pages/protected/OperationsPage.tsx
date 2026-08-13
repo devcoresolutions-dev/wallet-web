@@ -312,14 +312,7 @@ export const OperationsPage: React.FC = () => {
       setIsExecuting(false);
     }
   }
-
-  const operationLabel =
-    opMode === 'SWAP'
-      ? 'Intercambio Directo'
-      : opMode === 'BUY'
-        ? 'Compra'
-        : 'Venta';
-
+  
   return (
     <div className={styles.container}>
       {/* ─── Bar de Estado ─── */}
