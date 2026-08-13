@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import styles from './TransactionsPage.module.css';
 import type { Transaction, TransactionType } from '../../types/transaction';
 import { getTransactions } from '../../services/transactionService';
-
-// Helpers de formato
+import { formatCurrencyAmount } from '../../utils/formatters';
 
 const TYPE_LABEL: Record<TransactionType, string> = {
   BUY: 'Compra',
@@ -23,11 +22,6 @@ const STATUS_CLASS: Record<Transaction['status'], string> = {
   FAILED: styles.statusFailed,
 };
 
-function formatAmount(amount: string, currency: string): string {
-  const n = parseFloat(amount);
-  return `${n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
-}
-
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-AR', {
     day: '2-digit',
@@ -39,16 +33,14 @@ function formatDate(iso: string): string {
 }
 
 function formatRate(t: Transaction): string {
-  const rate = parseFloat(t.exchangeRate);
+  const rate = parseFloat(t.exchangeRate) || 0;
   return `1 ${t.fromCurrency} = ${rate.toLocaleString('es-AR', { maximumFractionDigits: 4 })} ${t.toCurrency}`;
 }
 
 function formatFee(t: Transaction): string {
-  if (parseFloat(t.feeAmount) === 0) return 'Sin comisión';
-  return `${formatAmount(t.feeAmount, t.feeCurrency)}`;
+  if (!t.feeAmount || parseFloat(t.feeAmount) === 0) return 'Sin comisión';
+  return formatCurrencyAmount(t.feeAmount, t.feeCurrency);
 }
-
-// Componente
 
 const FILTERS: Array<{ key: TransactionType | 'ALL'; label: string }> = [
   { key: 'ALL', label: 'Todas' },
@@ -85,7 +77,6 @@ export default function History() {
     <div className={styles.screen}>
       <div className={styles.wrapper}>
         <div className={styles.titleRow}>
-          <div className={styles.iconBox}>X</div>
           <div>
             <h1 className={styles.title}>Historial</h1>
             <p className={styles.subtitle}>Tus operaciones, con la tasa y la comisión aplicada en cada una</p>
@@ -141,9 +132,9 @@ export default function History() {
                 </div>
 
                 <div className={styles.amountRow}>
-                  <span>{formatAmount(t.fromAmount, t.fromCurrency)}</span>
+                  <span>{formatCurrencyAmount(t.fromAmount, t.fromCurrency)}</span>
                   <span className={styles.arrow}>→</span>
-                  <span>{formatAmount(t.toAmount, t.toCurrency)}</span>
+                  <span>{formatCurrencyAmount(t.toAmount, t.toCurrency)}</span>
                 </div>
 
                 <div className={styles.detailGrid}>
@@ -153,7 +144,7 @@ export default function History() {
                   </div>
                   <div>
                     <p className={styles.detailLabel}>Comisión</p>
-                    <p className={parseFloat(t.feeAmount) === 0 ? styles.detailValueMuted : styles.detailValue}>
+                    <p className={!t.feeAmount || parseFloat(t.feeAmount) === 0 ? styles.detailValueMuted : styles.detailValue}>
                       {formatFee(t)}
                     </p>
                   </div>

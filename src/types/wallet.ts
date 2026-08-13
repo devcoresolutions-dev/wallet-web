@@ -1,10 +1,21 @@
 import type { CurrencyCode } from './currency';
 
-export interface Balance {
+export interface RawBalance {
+  currencyCode: CurrencyCode;
+  currencyName: string;
+  symbol: string;
+  decimals: number;
+  amount: string; // En string para conservar precisión decimal exacta
+}
+
+export interface BalanceResponse {
+  walletId: string;
+  balances: RawBalance[];
+}
+
+export interface Balance extends RawBalance {
   id: string;
   walletId: string;
-  currencyCode: CurrencyCode;
-  amount: string; // Representado en string para evitar problemas de coma flotante
 }
 
 export interface Wallet {
