@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/chatbot', label: 'Chat AI', icon: 'X', mobile: true },
   { path: '/notifications', label: 'Avisos', icon: 'X', mobile: false },
   { path: '/settings', label: 'Ajustes', icon: 'X', mobile: true },
+  { path: '/EnterBalancePage', label: 'Ingresar Saldo', icon: 'X', mobile: true },
 ];
 
 export const ProtectedLayout: React.FC = () => {

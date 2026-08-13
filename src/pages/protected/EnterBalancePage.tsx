@@ -117,9 +117,6 @@ export default function EnterBalance({ onSuccess, onBack }: EnterBalanceProps) {
   return (
     <div className={styles.app}>
       <div className={styles.topbar}>
-        <button type="button" className={styles.back} onClick={onBack}>
-          &larr; Operar
-        </button>
         <span className={styles.sep}>/</span>
         <span className={styles.current}>Ingresar saldo</span>
       </div>
